@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar';
 import Feed from './components/Feed';
 import QuestionDetail from './components/QuestionDetail';
 import CreateQuestionModal from './components/CreateQuestionModal';
+import homepage from './pages/Homepage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import { Question, User } from './types';
@@ -90,14 +91,13 @@ const App: React.FC = () => {
             <>
               <Navbar
                 onOpenModal={() => setIsModalOpen(true)}
-                onSearch={setSearchQuery}
-                currentUser={user}
-                theme={theme}
-                onToggleTheme={toggleTheme}
+                user={user}
                 onLogout={handleLogout}
-
+                theme={theme}
+                onThemeToggle={toggleTheme}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
               />
-
               <main className="max-w-6xl mx-auto pt-20 px-4 flex gap-6">
                 <div className="hidden md:block w-48 shrink-0">
                   <Sidebar theme={theme} />

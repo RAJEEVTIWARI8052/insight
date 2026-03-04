@@ -12,14 +12,14 @@ const app = express();
 
 app.use(
   cors({
-    origin: "https://codevirus-insights.vercel.app",
+    origin: "https://localhost:3000",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
 );
 
 
-app.options("*", cors());
+app.use( cors());
 app.use(express.json());
 
 
