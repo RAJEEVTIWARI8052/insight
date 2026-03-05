@@ -1,13 +1,13 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 interface NavbarProps {
   onOpenModal: () => void;
   onSearch: (query: string) => void;
   currentUser: any;
-  theme: 'light' | 'dark';
+  theme: "light" | "dark";
   onToggleTheme: () => void;
-  onLogout: () => void;  
+  onLogout: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -16,92 +16,131 @@ const Navbar: React.FC<NavbarProps> = ({
   currentUser,
   theme,
   onToggleTheme,
-  onLogout  
+  onLogout
 }) => {
+
   const navigate = useNavigate();
 
   const handleLogout = () => {
     onLogout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
-    <nav className={`fixed top-0 w-full z-50 border-b transition-colors ${theme === 'dark'
-        ? 'bg-slate-900/95 border-slate-800'
-        : 'bg-white/95 border-slate-200'
-      } backdrop-blur`}>
-      <div className="max-w-6xl mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
+    <nav
+      className={`fixed top-0 w-full z-50 border-b backdrop-blur ${theme === "dark"
+          ? "bg-slate-900/95 border-slate-800"
+          : "bg-white/95 border-slate-200"
+        }`}
+    >
+      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+
+        {/* Left Section */}
+        <div className="flex items-center gap-6">
+
           {/* Logo */}
           <Link to="/" className="text-xl font-bold text-blue-600">
             CodeVirus
           </Link>
 
-          {/* Search Bar */}
-          <div className="flex-1 max-w-xl mx-4">
-            <input
-              type="text"
-              placeholder="Search questions..."
-              onChange={(e) => onSearch(e.target.value)}
-              className={`w-full px-4 py-2 rounded-full border ${theme === 'dark'
-                  ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400'
-                  : 'bg-white border-slate-300 placeholder-slate-500'
-                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
-          </div>
+          {/* Navigation Icons */}
+          <div className="hidden md:flex items-center gap-6 text-lg">
 
-          {/* Right Section */}
-          <div className="flex items-center gap-4">
-            {/* Theme Toggle */}
-            <button
-              onClick={onToggleTheme}
-              className={`p-2 rounded-full ${theme === 'dark'
-                  ? 'bg-slate-800 text-yellow-400'
-                  : 'bg-slate-200 text-slate-700'
-                }`}
+            <Link
+              to="/"
+              className="text-slate-400 hover:text-blue-500 transition"
             >
-              {theme === 'dark' ? '☀️' : '🌙'}
-            </button>
+              <i className="fa-solid fa-house"></i>
+            </Link>
 
-            {/* User Section */}
-            {currentUser ? (
-              <>
-                <button
-                  onClick={onOpenModal}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                >
-                  Ask Question
-                </button>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm hidden sm:inline">
-                    {currentUser?.name || 'User'}
-                  </span>
-                  <button
-                    onClick={handleLogout}
-                    className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition"
-                  >
-                    Logout
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="flex gap-2">
-                <Link
-                  to="/login"
-                  className="px-4 py-2 text-blue-600 hover:underline"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                >
-                  Register
-                </Link>
-              </div>
-            )}
+            <Link to="/following">
+              <i className="fa-solid fa-user-group"></i>
+            </Link>
+
+            <Link to="/spaces">
+              <i className="fa-solid fa-layer-group"></i>
+            </Link>
+            <Link to="/notifications">
+              <i className="fa-solid fa-bell"></i>
+            </Link>
+
           </div>
         </div>
+
+        {/* Search Bar */}
+        <div className="flex-1 max-w-xl mx-6">
+          <input
+            type="text"
+            placeholder="Search questions..."
+            onChange={(e) => onSearch(e.target.value)}
+            className={`w-full px-4 py-2 rounded-full border ${theme === "dark"
+                ? "bg-slate-800 border-slate-700 text-white placeholder-slate-400"
+                : "bg-white border-slate-300 placeholder-slate-500"
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+          />
+        </div>
+
+        {/* Right Section */}
+        <div className="flex items-center gap-4">
+
+          {/* Theme Toggle */}
+          <button
+            onClick={onToggleTheme}
+            className={`p-2 rounded-full ${theme === "dark"
+                ? "bg-slate-800 text-yellow-400"
+                : "bg-slate-200 text-slate-700"
+              }`}
+          >
+            {theme === "dark" ? "☀️" : "🌙"}
+          </button>
+
+          {currentUser ? (
+            <>
+              {/* Ask Button */}
+              <button
+                onClick={onOpenModal}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                Ask
+              </button>
+
+              {/* User */}
+              <div className="flex items-center gap-2">
+
+                <span className="text-sm hidden sm:inline">
+                  {currentUser?.username || "User"}
+                </span>
+
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition"
+                >
+                  Logout
+                </button>
+
+              </div>
+            </>
+          ) : (
+            <div className="flex gap-2">
+
+              <Link
+                to="/login"
+                className="px-4 py-2 text-blue-600 hover:underline"
+              >
+                Login
+              </Link>
+
+              <Link
+                to="/register"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              >
+                Register
+              </Link>
+
+            </div>
+          )}
+        </div>
+
       </div>
     </nav>
   );

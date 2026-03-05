@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
-
+import FollowingPage from "./pages/FollowingPage";
+import SpacePage from "./pages/SpacePage";
+import NotificationPage from "./pages/NotificationPage";
 import Homepage from "./pages/Homepage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -8,6 +10,9 @@ import QuestionDetail from "./components/QuestionDetail";
 
 import { Question, User } from "./types";
 import { initialQuestions } from "./data/mockData";
+import NotificationsPage from "./pages/NotificationPage";
+import SpacesPage from "./pages/SpacePage";
+import Navbar from "./components/Navbar";
 
 const STORAGE_KEY = "codevirus_data";
 const USER_KEY = "codevirus_user";
@@ -76,14 +81,32 @@ const App: React.FC = () => {
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-300 ${
-        theme === "dark"
-          ? "bg-slate-950 text-slate-200"
-          : "bg-slate-50 text-slate-900"
-      }`}
+      className={`min-h-screen transition-colors duration-300 ${theme === "dark"
+        ? "bg-slate-950 text-slate-200"
+        : "bg-slate-50 text-slate-900"
+        }`}
     >
-      <Routes>
+      <Navbar
+        onOpenModal={() => { }}
+        onSearch={() => { }}
+        currentUser={user}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onLogout={handleLogout}
+      />
 
+      <Routes>
+        <Route
+          path="/following"
+          element={
+            <FollowingPage
+              theme={theme}
+              onSearchChange={setSearchQuery}
+            />
+          }
+        />
+        <Route path="/spaces" element={<SpacesPage questions={questions} theme={theme} />} />
+        <Route path="/notifications" element={<NotificationsPage questions={questions} theme={theme} />} />
         <Route
           path="/login"
           element={<LoginPage onLogin={handleLogin} theme={theme} />}

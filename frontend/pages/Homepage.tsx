@@ -30,6 +30,13 @@ const Homepage: React.FC<Props> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [postMode, setPostMode] = useState<"ask" | "analyze" | "broadcast">("ask");
 
+  // TEST USER so modal always shows
+  const testUser: User = user ?? {
+  _id: "test-user",
+  username: "tester",
+  avatar: "https://i.pravatar.cc/40",
+  email: "test@test.com"
+} as unknown as User;
   const openModal = (mode: "ask" | "analyze" | "broadcast") => {
     setPostMode(mode);
     setIsModalOpen(true);
@@ -37,15 +44,6 @@ const Homepage: React.FC<Props> = ({
 
   return (
     <>
-      <Navbar
-        onOpenModal={() => openModal("ask")}
-        user={user}
-        onLogout={onLogout}
-        theme={theme}
-        onThemeToggle={onThemeToggle}
-        searchQuery={searchQuery}
-        onSearchChange={onSearchChange}
-      />
 
       <main className="max-w-6xl mx-auto pt-20 px-4 flex gap-6">
 
@@ -70,12 +68,12 @@ const Homepage: React.FC<Props> = ({
 
       </main>
 
-      {isModalOpen && user && (
+      {isModalOpen && (
         <CreateQuestionModal
           mode={postMode}
           onClose={() => setIsModalOpen(false)}
           onSubmit={onAddQuestion}
-          user={user}
+          user={testUser}
           theme={theme}
         />
       )}
