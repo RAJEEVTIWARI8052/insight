@@ -4,6 +4,7 @@ export interface User {
   name: string;
   avatar: string;
   bio?: string;
+  role?: 'user' | 'expert';
 }
 
 export interface Answer {
@@ -18,6 +19,7 @@ export interface Answer {
 
 export interface Question {
   id: string;
+  _id?: string;
   title: string;
   content?: string;
   author: User;
@@ -25,6 +27,9 @@ export interface Question {
   timestamp: string;
   answers: Answer[];
   imageUrl?: string;
+  category?: string;
+  expertResponse?: string;
+  status?: 'open' | 'answered' | 'closed';
 }
 
 export interface Topic {

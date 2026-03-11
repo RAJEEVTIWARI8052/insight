@@ -1,14 +1,16 @@
 import React from "react";
-import { Question } from "../types";
+import { Question, User } from "../types";
 import QuestionCard from "./QuestionCard";
 
 interface FeedProps {
   questions: Question[];
   theme: "light" | "dark";
   onOpenModal: (mode: "ask" | "analyze" | "broadcast") => void;
+  user: User | null;
+  onDelete: (id: string) => void;
 }
 
-const Feed: React.FC<FeedProps> = ({ questions = [], theme, onOpenModal }) => {
+const Feed: React.FC<FeedProps> = ({ questions = [], theme, onOpenModal, user, onDelete }) => {
 
   const handleAsk = () => onOpenModal("ask");
   const handleAnalyze = () => onOpenModal("analyze");
@@ -19,11 +21,10 @@ const Feed: React.FC<FeedProps> = ({ questions = [], theme, onOpenModal }) => {
 
       {/* Create Post Box */}
       <div
-        className={`rounded-lg p-4 border shadow-sm flex flex-col gap-3 transition-colors ${
-          theme === "dark"
-            ? "bg-slate-900 border-slate-800"
-            : "bg-white border-slate-200"
-        }`}
+        className={`rounded-lg p-4 border shadow-sm flex flex-col gap-3 transition-colors ${theme === "dark"
+          ? "bg-slate-900 border-slate-800"
+          : "bg-white border-slate-200"
+          }`}
       >
 
         {/* Input Row */}
@@ -40,11 +41,10 @@ const Feed: React.FC<FeedProps> = ({ questions = [], theme, onOpenModal }) => {
             placeholder="Discovered a vulnerability? Document it here..."
             readOnly
             onClick={handleAsk}
-            className={`flex-1 border rounded-full px-4 text-sm cursor-pointer transition-colors ${
-              theme === "dark"
-                ? "bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300"
-                : "bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-600"
-            }`}
+            className={`flex-1 border rounded-full px-4 text-sm cursor-pointer transition-colors ${theme === "dark"
+              ? "bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300"
+              : "bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-600"
+              }`}
           />
 
         </div>
@@ -89,17 +89,18 @@ const Feed: React.FC<FeedProps> = ({ questions = [], theme, onOpenModal }) => {
           key={question._id || question.id}
           question={question}
           theme={theme}
+          currentUser={user}
+          onDelete={onDelete}
         />
       ))}
 
       {/* Empty State */}
       {questions.length === 0 && (
         <div
-          className={`p-12 text-center rounded-lg border ${
-            theme === "dark"
-              ? "bg-slate-900 border-slate-800"
-              : "bg-white border-slate-200"
-          }`}
+          className={`p-12 text-center rounded-lg border ${theme === "dark"
+            ? "bg-slate-900 border-slate-800"
+            : "bg-white border-slate-200"
+            }`}
         >
           <i className="fa-solid fa-radar text-4xl text-slate-300 mb-4"></i>
 

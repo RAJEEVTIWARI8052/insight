@@ -9,6 +9,7 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "@clerk/express": "^2.0.1",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.9.0",
     "cors": "^2.8.6",

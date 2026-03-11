@@ -1,63 +1,63 @@
 import React, { useState, useEffect } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import FollowingPage from "./pages/FollowingPage";
 import SpacePage from "./pages/SpacePage";
-import NotificationPage from "./pages/NotificationPage";
 import Homepage from "./pages/Homepage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
 import QuestionDetail from "./components/QuestionDetail";
+import { SignIn, SignUp, SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
+import CreateQuestionModal from "./components/CreateQuestionModal";
 
-import { Question, User } from "./types";
+import { Question, User as LocalUser } from "./types";
 import { initialQuestions } from "./data/mockData";
 import NotificationsPage from "./pages/NotificationPage";
 import SpacesPage from "./pages/SpacePage";
 import Navbar from "./components/Navbar";
+import axios from "axios";
 
 const STORAGE_KEY = "codevirus_data";
-const USER_KEY = "codevirus_user";
 const THEME_KEY = "codevirus_theme";
 
 const App: React.FC = () => {
-  const navigate = useNavigate();
-
-  const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem(USER_KEY);
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+  const { user: clerkUser, isLoaded } = useUser();
 
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     const savedTheme = localStorage.getItem(THEME_KEY);
     return (savedTheme as "light" | "dark") || "dark";
   });
 
-  const [questions, setQuestions] = useState<Question[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : initialQuestions;
-  });
+  const [questions, setQuestions] = useState<Question[]>([]);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [postMode, setPostMode] = useState<"ask" | "analyze" | "broadcast">("ask");
+
+  const openModal = (mode: "ask" | "analyze" | "broadcast" = "ask") => {
+    setPostMode(mode);
+    setIsModalOpen(true);
+  };
+
+  const currentUser: LocalUser | null = clerkUser ? {
+    id: clerkUser.id,
+    name: clerkUser.username || clerkUser.firstName || "User",
+    avatar: clerkUser.imageUrl
+  } : null;
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(questions));
-  }, [questions]);
+    const fetchQuestions = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/questions`);
+        setQuestions(response.data);
+      } catch (error) {
+        console.error("Failed to fetch questions:", error);
+      }
+    };
+    fetchQuestions();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(THEME_KEY, theme);
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
-
-  const handleLogin = (newUser: User) => {
-    setUser(newUser);
-    localStorage.setItem(USER_KEY, JSON.stringify(newUser));
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem(USER_KEY);
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
 
   const handleAddQuestion = (newQuestion: Question) => {
     setQuestions((prev) => [newQuestion, ...prev]);
@@ -65,8 +65,12 @@ const App: React.FC = () => {
 
   const handleUpdateQuestion = (updatedQuestion: Question) => {
     setQuestions((prev) =>
-      prev.map((q) => (q.id === updatedQuestion.id ? updatedQuestion : q))
+      prev.map((q) => (q.id === updatedQuestion.id || q._id === updatedQuestion._id ? updatedQuestion : q))
     );
+  };
+
+  const handleDeleteQuestion = (id: string) => {
+    setQuestions((prev) => prev.filter((q) => q.id !== id && q._id !== id));
   };
 
   const toggleTheme = () => {
@@ -87,12 +91,10 @@ const App: React.FC = () => {
         }`}
     >
       <Navbar
-        onOpenModal={() => { }}
-        onSearch={() => { }}
-        currentUser={user}
+        onOpenModal={() => openModal("ask")}
+        onSearch={setSearchQuery}
         theme={theme}
         onToggleTheme={toggleTheme}
-        onLogout={handleLogout}
       />
 
       <Routes>
@@ -107,28 +109,39 @@ const App: React.FC = () => {
         />
         <Route path="/spaces" element={<SpacesPage questions={questions} theme={theme} />} />
         <Route path="/notifications" element={<NotificationsPage questions={questions} theme={theme} />} />
+
         <Route
           path="/login"
-          element={<LoginPage onLogin={handleLogin} theme={theme} />}
+          element={
+            <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
+              <SignIn routing="path" path="/login" signUpUrl="/register" />
+            </div>
+          }
         />
 
         <Route
           path="/register"
-          element={<RegisterPage onLogin={handleLogin} theme={theme} />}
+          element={
+            <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
+              <SignUp routing="path" path="/register" signInUrl="/login" />
+            </div>
+          }
         />
 
         <Route
           path="/"
           element={
             <Homepage
-              user={user}
+              user={currentUser}
               theme={theme}
               questions={filteredQuestions}
-              onLogout={handleLogout}
+              onLogout={() => { }}
               onAddQuestion={handleAddQuestion}
               onThemeToggle={toggleTheme}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
+              onOpenModal={openModal}
+              onDelete={handleDeleteQuestion}
             />
           }
         />
@@ -139,13 +152,23 @@ const App: React.FC = () => {
             <QuestionDetail
               questions={questions}
               onUpdate={handleUpdateQuestion}
-              currentUser={user}
+              currentUser={currentUser}
               theme={theme}
             />
           }
         />
 
       </Routes>
+
+      {isModalOpen && (
+        <CreateQuestionModal
+          mode={postMode}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleAddQuestion}
+          user={currentUser || { id: "guest", name: "Guest", avatar: "" } as any}
+          theme={theme}
+        />
+      )}
     </div>
   );
 };
