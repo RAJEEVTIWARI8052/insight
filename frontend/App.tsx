@@ -92,14 +92,14 @@ const App: React.FC = () => {
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/toggle-role`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setLocalUserProfile({
-        ...localUserProfile!,
+      setLocalUserProfile(prev => ({
+        ...prev!,
         role: response.data.role
-      });
-      // Removing alert for better UX, using state feedback instead
-      console.log(`Role switched to: ${response.data.role}`);
+      }));
+      alert(`Success! Your role is now: ${response.data.role.toUpperCase()}`);
     } catch (e) {
       console.error("Failed to toggle role", e);
+      alert("Failed to switch role. Please check your connection.");
     }
   };
 
