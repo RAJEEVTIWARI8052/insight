@@ -22,6 +22,7 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
   const [openAnswerMenuId, setOpenAnswerMenuId] = useState<string | null>(null);
 
   const question = questions.find(q => q.id === id || q._id === id);
+  console.log("QuestionDetail Render - Role:", currentUser?.role, "Expert Mode:", currentUser?.role === 'expert', "Question Found:", !!question);
 
   if (!question) {
     return (
@@ -199,7 +200,7 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
         </div>
 
         {/* Expert Response Input */}
-        {currentUser?.role === 'expert' && !question.expertResponse && (
+        {currentUser?.role === 'expert' && (!question.expertResponse || question.expertResponse === "") && (
           <div className={`mt-8 p-6 rounded-xl border ${theme === 'dark' ? 'bg-slate-800/40 border-slate-700' : 'bg-blue-50/50 border-blue-100'}`}>
             <h3 className={`font-bold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Provide Expert Resolution</h3>
             <textarea

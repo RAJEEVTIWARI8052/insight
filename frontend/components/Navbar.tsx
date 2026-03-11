@@ -55,8 +55,8 @@ const Navbar: React.FC<NavbarProps> = ({
                 key={link.to}
                 to={link.to}
                 className={`relative px-4 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 flex items-center gap-2.5 group/nav ${location.pathname === link.to
-                    ? "text-blue-500 bg-blue-500/10"
-                    : "text-slate-500 hover:text-blue-500 hover:bg-slate-100/50 dark:hover:bg-blue-900/10"
+                  ? "text-blue-500 bg-blue-500/10"
+                  : "text-slate-500 hover:text-blue-500 hover:bg-slate-100/50 dark:hover:bg-blue-900/10"
                   }`}
               >
                 <i className={`fa-solid ${link.icon} text-lg transform group-hover/nav:scale-110 group-hover/nav:-translate-y-0.5 transition-transform`}></i>
@@ -79,8 +79,8 @@ const Navbar: React.FC<NavbarProps> = ({
             placeholder="Search insights..."
             onChange={(e) => onSearch(e.target.value)}
             className={`w-full pl-11 pr-4 py-2.5 rounded-2xl border text-sm transition-all duration-500 ${theme === "dark"
-                ? "bg-slate-900/40 border-slate-700/50 text-white placeholder-slate-500 group-hover:border-slate-500/50 group-focus-within:bg-slate-900"
-                : "bg-slate-100/50 border-slate-200 text-slate-900 placeholder-slate-400 group-hover:border-blue-300 group-focus-within:bg-white"
+              ? "bg-slate-900/40 border-slate-700/50 text-white placeholder-slate-500 group-hover:border-slate-500/50 group-focus-within:bg-slate-900"
+              : "bg-slate-100/50 border-slate-200 text-slate-900 placeholder-slate-400 group-hover:border-blue-300 group-focus-within:bg-white"
               } focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:w-[105%] -translate-x-0 focus:-translate-x-[2.5%]`}
           />
         </div>
@@ -91,25 +91,26 @@ const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={onToggleTheme}
             className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-90 ${theme === "dark"
-                ? "bg-slate-800 text-yellow-400 hover:shadow-[0_0_20px_rgba(250,204,21,0.2)]"
-                : "bg-slate-100 text-slate-600 hover:shadow-xl"
+              ? "bg-slate-800 text-yellow-400 hover:shadow-[0_0_20px_rgba(250,204,21,0.2)]"
+              : "bg-slate-100 text-slate-600 hover:shadow-xl"
               }`}
           >
             <i className={`fa-solid ${theme === "dark" ? "fa-sun" : "fa-moon"} text-xl transform transition-transform duration-700 ${theme === 'dark' ? 'rotate-180' : 'rotate-0'}`}></i>
           </button>
 
           <SignedIn>
-            {/* Expert Mode Button - Premium Gradient & Shine */}
             <button
               onClick={onToggleRole}
               className={`hidden sm:flex items-center gap-2.5 px-4 py-2.5 text-xs font-black uppercase tracking-wider rounded-2xl transition-all duration-500 border relative overflow-hidden group/expert ${userRole === 'expert'
-                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 border-purple-400 text-white shadow-lg shadow-purple-500/30"
-                  : "bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:border-purple-400"
+                ? "bg-gradient-to-r from-purple-600 to-indigo-600 border-purple-400 text-white shadow-lg shadow-purple-500/30"
+                : "bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:border-purple-400"
                 }`}
             >
               <div className="shimmer-btn absolute inset-0 opacity-0 group-hover/expert:opacity-100 transition-opacity"></div>
               <i className={`fa-solid ${userRole === 'expert' ? 'fa-user-tie' : 'fa-user-astronaut'} text-sm z-10`}></i>
-              <span className="z-10 font-outfit">{userRole === 'expert' ? 'Expert Status' : 'Go Expert'}</span>
+              <span className="z-10 font-outfit">
+                {userRole === 'expert' ? 'Expert Active' : 'Switch to Expert'}
+              </span>
             </button>
 
             {/* Ask Button - Pulse Effect */}
