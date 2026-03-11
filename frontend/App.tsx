@@ -92,10 +92,15 @@ const App: React.FC = () => {
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/toggle-role`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setLocalUserProfile(prev => ({
-        ...prev!,
-        role: response.data.role
-      }));
+      setLocalUserProfile(prev => {
+        if (!prev) return {
+          id: response.data._id,
+          name: clerkUser?.username || "User",
+          avatar: clerkUser?.imageUrl || "",
+          role: response.data.role
+        };
+        return { ...prev, role: response.data.role };
+      });
       alert(`Success! Your role is now: ${response.data.role.toUpperCase()}`);
     } catch (e) {
       console.error("Failed to toggle role", e);
