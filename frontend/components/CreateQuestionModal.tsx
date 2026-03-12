@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { User, Question } from "../types";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
@@ -27,13 +28,10 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
   const { getToken } = useAuth();
 
   const handleSubmit = async (bypass: boolean = false) => {
-
     if (!title.trim()) return;
 
     try {
-
       setIsGeneratingImage(true);
-
       const token = await getToken();
 
       const response = await axios.post(
@@ -62,103 +60,127 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
       }
 
     } catch (error: any) {
-
       console.error(
         "Broadcast failed:",
         error.response?.data?.message || error.message
       );
-
       alert("Security Inquiry failed to broadcast");
-
     } finally {
-
       setIsGeneratingImage(false);
-
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-hidden">
 
       {/* Background overlay */}
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-950/60 backdrop-blur-md animate-fade-in"
         onClick={onClose}
       />
 
       {/* Modal panel */}
       <div
-        className={`relative z-50 w-full max-w-xl rounded-xl shadow-xl border p-6 ${theme === "dark"
-          ? "bg-slate-900 border-slate-700 text-white"
+        className={`relative z-[10000] w-full max-w-xl rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] border animate-scale-in p-8 ${theme === "dark"
+          ? "bg-slate-900 border-slate-700/50 text-white"
           : "bg-white border-slate-200 text-black"
           }`}
       >
+        {/* Accent Line */}
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500"></div>
 
         {duplicateData ? (
           <div className="animate-fade-in">
-            <div className={`p-4 rounded-xl border-l-4 mb-6 ${theme === 'dark' ? 'bg-emerald-950/20 border-emerald-500' : 'bg-emerald-50 border-emerald-500'}`}>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                  <i className="fa-solid fa-robot text-xs text-white"></i>
-                </div>
-                <h3 className="text-sm font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-                  Similarity Detected
-                </h3>
+            <div className={`p-6 rounded-3xl border-l-[6px] mb-8 relative overflow-hidden group/dupe ${theme === 'dark' ? 'bg-emerald-950/20 border-emerald-500' : 'bg-emerald-50 border-emerald-500'}`}>
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover/dupe:opacity-10 transition-opacity">
+                <i className="fa-solid fa-clone text-6xl text-emerald-500"></i>
               </div>
-              <p className={`text-sm mb-4 font-medium ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
-                A similar issue has already been resolved by an expert. Here is the definitive solution:
+
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shadow-xl shadow-emerald-500/30">
+                  <i className="fa-solid fa-robot text-sm text-white"></i>
+                </div>
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
+                    Similarity Detected
+                  </h3>
+                  <p className="text-[10px] font-bold text-emerald-500/60 uppercase tracking-widest leading-none mt-1">Found in Security Database</p>
+                </div>
+              </div>
+
+              <p className={`text-sm mb-5 font-bold leading-relaxed ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>
+                A technical expert has already addressed this inquiry. Here is the verified solution:
               </p>
-              <div className={`p-4 rounded-xl text-sm leading-relaxed border ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-300' : 'bg-white border-slate-200 text-slate-700'}`}>
+
+              <div className={`p-5 rounded-[1.5rem] text-sm leading-relaxed border font-medium relative z-10 ${theme === 'dark' ? 'bg-slate-950/50 border-slate-800 text-slate-300' : 'bg-white border-slate-200 text-slate-600'}`}>
                 {duplicateData.suggestedResponse}
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 font-bold">
+            <div className="flex flex-col gap-3 font-black">
               <button
                 onClick={onClose}
-                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl transition-all shadow-xl shadow-emerald-500/20"
+                className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[1.5rem] transition-all shadow-xl shadow-emerald-500/20 text-sm uppercase tracking-widest"
               >
-                Accept Resolution & Close
+                Accept Resolution & Exit
               </button>
               <button
                 onClick={() => handleSubmit(true)}
-                className={`w-full py-3.5 rounded-2xl transition-all border ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
+                className={`w-full py-4 rounded-[1.5rem] transition-all border text-sm uppercase tracking-widest ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-500 hover:bg-slate-200'
                   }`}
               >
-                Not what I'm looking for, post anyway
+                Not Quite, Post My Inquiry
               </button>
             </div>
           </div>
         ) : (
           <>
-            <h2 className={`text-xl font-black font-outfit mb-6 ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
-              {mode === "ask" && "Launch Security Inquiry"}
-              {mode === "analyze" && "Perform Vulnerability Analysis"}
-              {mode === "broadcast" && "Broadcast Intelligence"}
-            </h2>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 border border-blue-500/20">
+                  <i className={`fa-solid ${mode === 'ask' ? 'fa-shield-halved' : mode === 'analyze' ? 'fa-code-merge' : 'fa-bolt'} text-xl`}></i>
+                </div>
+                <div>
+                  <h2 className={`text-2xl font-black font-outfit leading-none mb-1 ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
+                    {mode === "ask" && "Launch Inquiry"}
+                    {mode === "analyze" && "Analyze Threat"}
+                    {mode === "broadcast" && "Broadcast Intel"}
+                  </h2>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500/80">Cyber Intelligence Network</p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className={`w-10 h-10 flex items-center justify-center rounded-2xl transition-all ${theme === 'dark' ? 'hover:bg-slate-800 text-slate-500' : 'hover:bg-slate-100 text-slate-400'
+                  }`}
+              >
+                <i className="fa-solid fa-xmark"></i>
+              </button>
+            </div>
 
-            <div className="space-y-4">
-              <div className="group">
-                <label className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 block ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Issue Title
+            <div className="space-y-6">
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 px-1 block ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                  Inquiry Title
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Unusual lateral movement in Segment 4"
-                  className={`w-full p-4 rounded-2xl border text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all ${theme === "dark" ? "bg-slate-950 border-slate-700 text-white placeholder-slate-700" : "bg-slate-50 border-slate-200 text-slate-900"
+                  placeholder="e.g. Lateral movement detected in VLAN 4"
+                  className={`w-full p-4 rounded-[1.5rem] border text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all ${theme === "dark" ? "bg-slate-950/80 border-slate-700 text-white placeholder-slate-800" : "bg-slate-50 border-slate-200 text-slate-900"
                     }`}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  autoFocus
                 />
               </div>
 
-              <div className="group">
-                <label className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 block ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Technical Details
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 px-1 block ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                  Intelligence Data
                 </label>
                 <textarea
-                  placeholder="Provide logs, traces, or specific symptoms..."
-                  className={`w-full p-4 rounded-2xl border text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all min-h-[150px] ${theme === "dark" ? "bg-slate-950 border-slate-700 text-white placeholder-slate-700" : "bg-slate-50 border-slate-200 text-slate-900"
+                  placeholder="Paste logs, signatures, or specific symptoms..."
+                  className={`w-full p-4 rounded-[1.5rem] border text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all min-h-[160px] leading-relaxed ${theme === "dark" ? "bg-slate-950/80 border-slate-700 text-white placeholder-slate-800" : "bg-slate-50 border-slate-200 text-slate-900"
                     }`}
                   rows={5}
                   value={content}
@@ -169,7 +191,7 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
               <div className="flex items-center justify-between pt-4">
                 <button
                   onClick={onClose}
-                  className={`px-6 py-2.5 font-bold text-sm transition-colors ${theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}
+                  className={`px-6 py-2.5 font-black text-xs uppercase tracking-widest transition-colors ${theme === 'dark' ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-slate-900'}`}
                 >
                   Cancel
                 </button>
@@ -177,12 +199,12 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
                 <button
                   onClick={() => handleSubmit(false)}
                   disabled={!title.trim() || isGeneratingImage}
-                  className={`px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-black text-sm transition-all shadow-xl shadow-blue-500/20 transform hover:-translate-y-0.5 active:translate-y-0 ${(!title.trim() || isGeneratingImage) ? "opacity-50 cursor-not-allowed" : ""
+                  className={`px-8 py-3.5 bg-gradient-to-br from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] transition-all shadow-2xl shadow-blue-500/30 transform hover:-translate-y-1 active:scale-[0.98] ${(!title.trim() || isGeneratingImage) ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                 >
                   <div className="flex items-center gap-2">
-                    {isGeneratingImage ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-bolt"></i>}
-                    {isGeneratingImage ? "Analyzing..." : "Post Inquiry"}
+                    {isGeneratingImage ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-paper-plane"></i>}
+                    {isGeneratingImage ? "Broadcasting..." : "Broadcast Inquiry"}
                   </div>
                 </button>
               </div>
@@ -192,7 +214,21 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
 
       </div>
 
-    </div>
+      <style>{`
+                @keyframes fade-in {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes scale-in {
+                    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
+                }
+                .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+                .animate-scale-in { animation: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+            `}</style>
+
+    </div>,
+    document.body
   );
 };
 
