@@ -24,18 +24,20 @@ export const createQuestion = async (req, res) => {
 
     // Check for duplicates (safer search)
     const normalizedTitle = title.trim();
-    const existingQuestion = await Question.findOne({
-      title: { $regex: new RegExp(normalizedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') },
-      status: "answered"
-    }).sort({ createdAt: -1 });
+    if (!req.body.bypassDeduplication) {
+      const existingQuestion = await Question.findOne({
+        title: { $regex: new RegExp(normalizedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') },
+        status: "answered"
+      }).sort({ createdAt: -1 });
 
-    if (existingQuestion) {
-      console.log("Duplicate found:", existingQuestion._id);
-      return res.status(200).json({
-        message: "A similar issue was previously answered.",
-        existingQuestion,
-        suggestedResponse: existingQuestion.expertResponse || "No specific response found, but this topic has been covered."
-      });
+      if (existingQuestion) {
+        console.log("Duplicate found:", existingQuestion._id);
+        return res.status(200).json({
+          message: "A similar issue was previously answered.",
+          existingQuestion,
+          suggestedResponse: existingQuestion.expertResponse || "No specific response found, but this topic has been covered."
+        });
+      }
     }
 
     // Classify the issue
