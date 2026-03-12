@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Question, Answer, User } from '../types';
 import axios from 'axios';
 import { useAuth } from '@clerk/clerk-react';
+import ExpertResolutionModal from './ExpertResolutionModal';
 
 interface QuestionDetailProps {
   questions: Question[];
@@ -20,6 +21,7 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
   const [expertResponseText, setExpertResponseText] = useState('');
   const [isQuestionMenuOpen, setIsQuestionMenuOpen] = useState(false);
   const [openAnswerMenuId, setOpenAnswerMenuId] = useState<string | null>(null);
+  const [isExpertModalOpen, setIsExpertModalOpen] = useState(false);
 
   const question = questions.find(q => q.id === id || q._id === id);
   console.log("QuestionDetail Render - Role:", currentUser?.role, "Expert Mode:", currentUser?.role === 'expert', "Question Found:", !!question);
@@ -72,14 +74,14 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
     }
   };
 
-  const handleExpertResponse = async () => {
-    if (!expertResponseText.trim() || !currentUser || currentUser.role !== 'expert') return;
+  const handleExpertResponse = async (text: string) => {
+    if (!text.trim() || !currentUser || currentUser.role !== 'expert') return;
 
     try {
       const token = await getToken();
       const response = await axios.put(
         `${import.meta.env.VITE_API_URL}/api/questions/${question._id || question.id}/respond`,
-        { response: expertResponseText },
+        { response: text },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       onUpdate(response.data);
@@ -199,25 +201,26 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
           </div>
         </div>
 
-        {/* Expert Response Input */}
+        {/* Expert Response Input Button */}
         {currentUser?.role === 'expert' && (!question.expertResponse || question.expertResponse === "") && (
-          <div className={`mt-8 p-6 rounded-xl border ${theme === 'dark' ? 'bg-slate-800/40 border-slate-700' : 'bg-blue-50/50 border-blue-100'}`}>
-            <h3 className={`font-bold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Provide Expert Resolution</h3>
-            <textarea
-              className={`w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition-all ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-200'}`}
-              placeholder="As an expert, provide a definitive answer for this issue..."
-              rows={4}
-              value={expertResponseText}
-              onChange={(e) => setExpertResponseText(e.target.value)}
-            ></textarea>
-            <div className="flex justify-end mt-2">
-              <button
-                onClick={handleExpertResponse}
-                className="bg-green-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-green-700 transition-colors"
-              >
-                Submit Resolution
-              </button>
+          <div className={`mt-8 p-8 rounded-3xl border border-dashed flex flex-col items-center justify-center text-center animate-fade-down ${theme === 'dark' ? 'bg-slate-800/20 border-slate-700' : 'bg-blue-50/30 border-blue-200'
+            }`}>
+            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-4 shadow-xl shadow-green-500/20">
+              <i className="fa-solid fa-user-tie text-2xl text-white"></i>
             </div>
+            <h3 className={`font-black text-xl font-outfit mb-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+              Expert Perspective Needed
+            </h3>
+            <p className={`text-sm mb-6 max-w-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+              This issue hasn't been resolved yet. As a verified expert, your insight is vital for the community.
+            </p>
+            <button
+              onClick={() => setIsExpertModalOpen(true)}
+              className="px-8 py-3.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-black rounded-2xl transition-all shadow-xl shadow-green-600/30 hover:-translate-y-1 active:scale-95 flex items-center gap-2"
+            >
+              <i className="fa-solid fa-plus-circle"></i>
+              Provide Resolution
+            </button>
           </div>
         )}
 
@@ -319,6 +322,13 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
           </div>
         </div>
       </div>
+
+      <ExpertResolutionModal
+        isOpen={isExpertModalOpen}
+        onClose={() => setIsExpertModalOpen(false)}
+        onSubmit={handleExpertResponse}
+        theme={theme}
+      />
     </div>
   );
 };
