@@ -1,12 +1,26 @@
 import Question from "../models/Question.js";
 import Notification from "../models/Notification.js";
 
-// Basic classifier function
+// Intelligent classifier function for Cyber Intelligence
 const classifyIssue = (title, content) => {
   const text = `${title} ${content}`.toLowerCase();
-  if (text.includes("bug") || text.includes("error") || text.includes("fail")) return "Bug";
-  if (text.includes("feature") || text.includes("add") || text.includes("improve")) return "Feature Request";
-  if (text.includes("how") || text.includes("question") || text.includes("help")) return "Support";
+
+  const mappings = [
+    { topic: "Malware Analysis", keywords: ["virus", "worm", "ransomware", "trojan", "malware", "reverse", "forensic", "payload", "obfuscation"] },
+    { topic: "Network Security", keywords: ["firewall", "vlan", "network", "dns", "ip", "proxy", "packet", "sniffing", "wifi", "port", "vpn"] },
+    { topic: "Penetration Testing", keywords: ["kali", "metasploit", "pentest", "vulnerability", "scanner", "exploit", "red team", "burp", "nmap"] },
+    { topic: "Cryptography", keywords: ["encryption", "decryption", "hash", "crypto", "sha256", "aes", "rsa", "kyber", "quantum", "tls", "ssl"] },
+    { topic: "DevSecOps", keywords: ["ci/cd", "pipeline", "docker", "kubernetes", "terraform", "automation", "jenkins", "github actions"] },
+    { topic: "Web Exploitation", keywords: ["xss", "sql", "injection", "csrf", "owasp", "header", "cookie", "bypass", "web", "appsec", "html", "js"] },
+    { topic: "Incident Response", keywords: ["attack", "breached", "alert", "soc", "log", "monitor", "response", "triage", "incident", "siem", "splunk"] }
+  ];
+
+  for (const mapping of mappings) {
+    if (mapping.keywords.some(kw => text.includes(kw))) {
+      return mapping.topic;
+    }
+  }
+
   return "General";
 };
 
@@ -64,7 +78,7 @@ export const createQuestion = async (req, res) => {
       const question = await Question.create({
         title,
         content,
-        topic,
+        topic: topic || category,
         category,
         imageUrl: imageUrl || "",
         author: req.user?._id,
@@ -87,7 +101,7 @@ export const createQuestion = async (req, res) => {
     const question = await Question.create({
       title,
       content,
-      topic,
+      topic: topic || category,
       category,
       imageUrl: imageUrl || "",
       author: req.user?._id

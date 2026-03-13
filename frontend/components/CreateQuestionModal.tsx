@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { User, Question } from "../types";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
+import { topics as sidebarTopics } from "../data/mockData";
 
 interface CreateQuestionModalProps {
   mode: "ask" | "analyze" | "broadcast";
@@ -24,6 +25,7 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
   const [content, setContent] = useState("");
   const [topic, setTopic] = useState("Malware Analysis");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isAutoDetecting, setIsAutoDetecting] = useState(true);
   const [autoResolvedData, setAutoResolvedData] = useState<{ expertResponse: string; topic: string } | null>(null);
   const [liveResolution, setLiveResolution] = useState<{ expertResponse: string; originalTitle: string } | null>(null);
   const { getToken } = useAuth();
@@ -50,6 +52,29 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
     const timeout = setTimeout(checkDupe, 500);
     return () => clearTimeout(timeout);
   }, [title, getToken]);
+
+  // Auto-detection logic for topics
+  useEffect(() => {
+    if (!isAutoDetecting || title.length < 3) return;
+
+    const text = (title + " " + content).toLowerCase();
+    const mappings = [
+      { topic: "Malware Analysis", keywords: ["virus", "worm", "ransomware", "trojan", "malware", "reverse", "forensic", "payload", "obfuscation"] },
+      { topic: "Network Security", keywords: ["firewall", "vlan", "network", "dns", "ip", "proxy", "packet", "sniffing", "wifi", "port", "vpn"] },
+      { topic: "Penetration Testing", keywords: ["kali", "metasploit", "pentest", "vulnerability", "scanner", "exploit", "red team", "burp", "nmap"] },
+      { topic: "Cryptography", keywords: ["encryption", "decryption", "hash", "crypto", "sha256", "aes", "rsa", "kyber", "quantum", "tls", "ssl"] },
+      { topic: "DevSecOps", keywords: ["ci/cd", "pipeline", "docker", "kubernetes", "terraform", "automation", "jenkins", "github actions"] },
+      { topic: "Web Exploitation", keywords: ["xss", "sql", "injection", "csrf", "owasp", "header", "cookie", "bypass", "web", "appsec", "html", "js"] },
+      { topic: "Incident Response", keywords: ["attack", "breached", "alert", "soc", "log", "monitor", "response", "triage", "incident", "siem", "splunk"] }
+    ];
+
+    for (const mapping of mappings) {
+      if (mapping.keywords.some(kw => text.includes(kw))) {
+        setTopic(mapping.topic);
+        break;
+      }
+    }
+  }, [title, content, isAutoDetecting]);
 
   const handleSubmit = async (bypass: boolean = false) => {
     if (!title.trim()) return;
@@ -212,6 +237,45 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                 />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <label className={`text-[10px] font-black uppercase tracking-[0.2em] ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Intelligence Field
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <span className={`text-[9px] font-bold uppercase transition-colors ${isAutoDetecting ? 'text-blue-500' : 'text-slate-500'}`}>
+                      {isAutoDetecting ? 'Auto-Detection Active' : 'Manual Selection'}
+                    </span>
+                    <div
+                      onClick={() => setIsAutoDetecting(!isAutoDetecting)}
+                      className={`w-8 h-4 rounded-full relative transition-all ${isAutoDetecting ? 'bg-blue-600' : 'bg-slate-700'}`}
+                    >
+                      <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${isAutoDetecting ? 'left-4.5' : 'left-0.5'}`} style={{ left: isAutoDetecting ? '18px' : '2px' }}></div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {sidebarTopics.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => {
+                        setTopic(t.name);
+                        setIsAutoDetecting(false);
+                      }}
+                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${topic === t.name
+                          ? "bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/20"
+                          : theme === "dark"
+                            ? "bg-slate-950/40 border-slate-800 text-slate-500 hover:border-slate-600"
+                            : "bg-slate-100 border-slate-200 text-slate-400 hover:border-slate-300"
+                        }`}
+                    >
+                      {t.name}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="flex items-center justify-between pt-4">
