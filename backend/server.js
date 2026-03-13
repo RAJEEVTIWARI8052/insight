@@ -7,6 +7,7 @@ import cors from "cors";
 import { clerkMiddleware } from "@clerk/express";
 import authRoutes from "./routes/authRoutes.js";
 import questionRoutes from "./routes/questionRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 console.log("CLERK_PUBLISHABLE_KEY:", process.env.CLERK_PUBLISHABLE_KEY ? "EXISTS" : "MISSING");
 console.log("CLERK_SECRET_KEY:", process.env.CLERK_SECRET_KEY ? "EXISTS" : "MISSING");
@@ -34,6 +35,7 @@ mongoose
 
 app.use("/api/auth", authRoutes);
 app.use("/api/questions", questionRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend running ");

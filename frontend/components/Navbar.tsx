@@ -9,6 +9,7 @@ interface NavbarProps {
   onToggleTheme: () => void;
   onToggleRole?: () => void;
   userRole?: string;
+  notificationsCount?: number;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -17,7 +18,8 @@ const Navbar: React.FC<NavbarProps> = ({
   theme,
   onToggleTheme,
   onToggleRole,
-  userRole
+  userRole,
+  notificationsCount = 0
 }) => {
   const location = useLocation();
 
@@ -61,6 +63,13 @@ const Navbar: React.FC<NavbarProps> = ({
               >
                 <i className={`fa-solid ${link.icon} text-lg transform group-hover/nav:scale-110 group-hover/nav:-translate-y-0.5 transition-transform`}></i>
                 <span className="font-outfit">{link.label}</span>
+
+                {link.to === "/notifications" && notificationsCount > 0 && (
+                  <span className="absolute top-1.5 right-2 w-4 h-4 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full animate-pulse border-2 border-white dark:border-slate-900 font-black">
+                    {notificationsCount > 9 ? '9+' : notificationsCount}
+                  </span>
+                )}
+
                 {location.pathname === link.to && (
                   <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></span>
                 )}

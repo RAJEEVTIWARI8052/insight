@@ -1,4 +1,5 @@
 import Question from "../models/Question.js";
+import Notification from "../models/Notification.js";
 
 // Basic classifier function
 const classifyIssue = (title, content) => {
@@ -134,6 +135,17 @@ export const addExpertResponse = async (req, res) => {
       return res.status(404).json({ message: "Issue not found." });
     }
 
+    // Trigger Notification for author
+    if (question.author && question.author.toString() !== req.user._id.toString()) {
+      await Notification.create({
+        recipient: question.author,
+        sender: req.user._id,
+        type: "expert_response",
+        message: `An expert has provided a definitive solution to your inquiry: "${question.title}"`,
+        link: `/question/${question._id}`
+      });
+    }
+
     res.status(200).json(question);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -178,6 +190,18 @@ export const upvoteQuestion = async (req, res) => {
     }
 
     await question.save();
+
+    // Trigger Notification if upvoted (index was -1 before push)
+    if (index === -1 && question.author && question.author.toString() !== userId.toString()) {
+      await Notification.create({
+        recipient: question.author,
+        sender: userId,
+        type: "upvote",
+        message: `Your inquiry "${question.title}" received a new upvote.`,
+        link: `/question/${question._id}`
+      });
+    }
+
     res.status(200).json(question);
   } catch (error) {
     res.status(500).json({ message: error.message });

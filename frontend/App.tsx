@@ -32,6 +32,7 @@ const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [postMode, setPostMode] = useState<"ask" | "analyze" | "broadcast">("ask");
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const openModal = (mode: "ask" | "analyze" | "broadcast" = "ask") => {
     setPostMode(mode);
@@ -83,6 +84,27 @@ const App: React.FC = () => {
       }
     };
     fetchProfile();
+  }, [clerkUser, getToken]);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (clerkUser) {
+        try {
+          const token = await getToken();
+          const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/notifications/unread-count`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUnreadCount(response.data.count);
+        } catch (error) {
+          console.error("Failed to fetch unread count:", error);
+        }
+      } else {
+        setUnreadCount(0);
+      }
+    };
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000); // Poll every 30s
+    return () => clearInterval(interval);
   }, [clerkUser, getToken]);
 
   useEffect(() => {
@@ -150,6 +172,7 @@ const App: React.FC = () => {
         onToggleTheme={() => setTheme(theme === 'light' ? 'dark' : 'light')}
         onToggleRole={handleToggleRole}
         userRole={currentUser?.role}
+        notificationsCount={unreadCount}
       />
 
       <Routes>
@@ -163,7 +186,17 @@ const App: React.FC = () => {
           }
         />
         <Route path="/spaces" element={<SpacesPage questions={questions} theme={theme} />} />
-        <Route path="/notifications" element={<NotificationsPage questions={questions} theme={theme} />} />
+        <Route
+          path="/notifications"
+          element={
+            <NotificationsPage
+              questions={questions}
+              theme={theme}
+              onSearchChange={setSearchQuery}
+              onMarkRead={() => setUnreadCount(0)}
+            />
+          }
+        />
 
         <Route
           path="/login"
