@@ -1,52 +1,73 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 const NeuralCursor: React.FC = () => {
-    const [position, setPosition] = useState({ x: -100, y: -100 });
+    const [points, setPoints] = useState<{ x: number; y: number; time: number }[]>([]);
+    const mousePos = useRef({ x: -100, y: -100 });
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
-            setPosition({ x: e.clientX, y: e.clientY });
+            mousePos.current = { x: e.clientX, y: e.clientY };
+            setPoints((prev) => {
+                // Limit points for performance, keep only last 2 seconds
+                const now = Date.now();
+                return [...prev, { x: e.clientX, y: e.clientY, time: now }].filter(p => now - p.time < 2000);
+            });
         };
 
         window.addEventListener('mousemove', handleMouseMove);
-        return () => window.removeEventListener('mousemove', handleMouseMove);
+
+        const cleanup = setInterval(() => {
+            const now = Date.now();
+            setPoints((prev) => prev.filter(p => now - p.time < 2000));
+        }, 100);
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            clearInterval(cleanup);
+        };
     }, []);
+
+    const pathData = points.length > 1
+        ? `M ${points[0].x} ${points[0].y} ` + points.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ')
+        : '';
 
     return (
         <div className="fixed inset-0 pointer-events-none z-[99999] overflow-hidden">
-            {/* Horizontal Scanning Line */}
+            {/* Laser Point */}
             <div
-                className="absolute left-0 w-full h-[1px] bg-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-transform duration-75 ease-out"
-                style={{ transform: `translateY(${position.y}px)` }}
+                className="absolute w-2 h-2 -ml-1 -mt-1 bg-blue-500 rounded-full shadow-[0_0_15px_#3b82f6] z-10"
+                style={{ left: `${mousePos.current.x}px`, top: `${mousePos.current.y}px` }}
             />
 
-            {/* Vertical Scanning Line */}
-            <div
-                className="absolute top-0 w-[1px] h-full bg-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-transform duration-75 ease-out"
-                style={{ transform: `translateX(${position.x}px)` }}
-            />
+            <svg className="w-full h-full">
+                <defs>
+                    <filter id="glow">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                </defs>
 
-            {/* Origin Crosshair */}
-            <div
-                className="absolute w-4 h-4 -ml-2 -mt-2 border border-blue-500/40 rounded-full transition-transform duration-100 ease-out flex items-center justify-center"
-                style={{ transform: `translate3d(${position.x}px, ${position.y}px, 0)` }}
-            >
-                <div className="w-1 h-1 bg-blue-400 rounded-full shadow-[0_0_8px_white]"></div>
+                {/* Shadow/Glow path */}
+                <path
+                    d={pathData}
+                    fill="none"
+                    stroke="rgba(59, 130, 246, 0.15)"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    filter="url(#glow)"
+                />
 
-                {/* Decorative Corner Brackets */}
-                <div className="absolute -top-1 -left-1 w-1.5 h-1.5 border-t border-l border-blue-400"></div>
-                <div className="absolute -bottom-1 -right-1 w-1.5 h-1.5 border-b border-r border-blue-400"></div>
-            </div>
-
-            <style>{`
-        @keyframes scan-glow {
-          0%, 100% { opacity: 0.1; }
-          50% { opacity: 0.3; }
-        }
-        .neural-lines {
-          animation: scan-glow 4s infinite ease-in-out;
-        }
-      `}</style>
+                {/* Core path */}
+                <path
+                    d={pathData}
+                    fill="none"
+                    stroke="rgba(59, 130, 246, 0.4)"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+            </svg>
         </div>
     );
 };
