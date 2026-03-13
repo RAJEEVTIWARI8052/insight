@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { User, Question } from "../types";
 import axios from "axios";
@@ -25,7 +25,31 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
   const [topic, setTopic] = useState("Malware Analysis");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [autoResolvedData, setAutoResolvedData] = useState<{ expertResponse: string; topic: string } | null>(null);
+  const [liveResolution, setLiveResolution] = useState<{ expertResponse: string; originalTitle: string } | null>(null);
   const { getToken } = useAuth();
+
+  useEffect(() => {
+    const checkDupe = async () => {
+      if (title.trim().length < 5) {
+        setLiveResolution(null);
+        return;
+      }
+
+      try {
+        const token = await getToken();
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/questions/check-duplicate?title=${encodeURIComponent(title)}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setLiveResolution(response.data);
+      } catch (e) {
+        console.error("Live check failed", e);
+      }
+    };
+
+    const timeout = setTimeout(checkDupe, 500);
+    return () => clearTimeout(timeout);
+  }, [title, getToken]);
 
   const handleSubmit = async (bypass: boolean = false) => {
     if (!title.trim()) return;
@@ -159,6 +183,21 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
                   onChange={(e) => setTitle(e.target.value)}
                   autoFocus
                 />
+
+                {liveResolution && !autoResolvedData && (
+                  <div className="mt-4 p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 animate-fade-down">
+                    <div className="flex items-center gap-2 mb-2">
+                      <i className="fa-solid fa-sparkles text-blue-500 text-xs"></i>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-blue-500">Instant AI Insight</span>
+                    </div>
+                    <p className={`text-[12px] font-bold mb-2 ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
+                      Similarity found with: <span className="text-blue-500">"{liveResolution.originalTitle}"</span>
+                    </p>
+                    <div className={`p-3 rounded-xl text-xs leading-relaxed border ${theme === 'dark' ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-white border-slate-200 text-slate-600'}`}>
+                      {liveResolution.expertResponse.substring(0, 150)}...
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>

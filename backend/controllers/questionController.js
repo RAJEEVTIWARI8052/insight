@@ -9,6 +9,30 @@ const classifyIssue = (title, content) => {
   return "General";
 };
 
+export const checkDuplicate = async (req, res) => {
+  try {
+    const { title } = req.query;
+    if (!title || title.length < 5) return res.status(200).json(null);
+
+    const normalizedTitle = title.trim();
+    // Use a more flexible regex for better discovery
+    const existingQuestion = await Question.findOne({
+      title: { $regex: new RegExp(normalizedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') },
+      status: "answered"
+    }).sort({ createdAt: -1 });
+
+    if (existingQuestion) {
+      return res.status(200).json({
+        expertResponse: existingQuestion.expertResponse,
+        originalTitle: existingQuestion.title
+      });
+    }
+    res.status(200).json(null);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const createQuestion = async (req, res) => {
   try {
     const { title, content, topic, imageUrl } = req.body;
@@ -22,10 +46,10 @@ export const createQuestion = async (req, res) => {
       return res.status(400).json({ message: "Title is required" });
     }
 
-    // Check for duplicates (safer search)
+    // Check for duplicates (flexible search)
     const normalizedTitle = title.trim();
     const existingQuestion = await Question.findOne({
-      title: { $regex: new RegExp(`^${normalizedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+      title: { $regex: new RegExp(normalizedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') },
       status: "answered"
     }).sort({ createdAt: -1 });
 

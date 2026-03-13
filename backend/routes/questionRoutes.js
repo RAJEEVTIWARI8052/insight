@@ -1,18 +1,15 @@
-import express from "express";
-import {
-    createQuestion,
-    getAllQuestions,
-    addExpertResponse,
-    deleteQuestion,
+deleteQuestion,
     upvoteQuestion,
     downvoteQuestion,
-    deleteAnswer
+    deleteAnswer,
+    checkDuplicate
 } from "../controllers/questionController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.get("/", getAllQuestions);
+router.get("/check-duplicate", protect, checkDuplicate);
 router.post("/", protect, createQuestion);
 router.put("/:id/respond", protect, addExpertResponse);
 router.delete("/:id", protect, deleteQuestion);
