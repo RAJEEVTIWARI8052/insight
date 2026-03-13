@@ -8,9 +8,9 @@ const NeuralCursor: React.FC = () => {
         const handleMouseMove = (e: MouseEvent) => {
             mousePos.current = { x: e.clientX, y: e.clientY };
             setPoints((prev) => {
-                // Limit points for performance, keep only last 2 seconds
+                // Limit points for performance, keep only last 1 second
                 const now = Date.now();
-                return [...prev, { x: e.clientX, y: e.clientY, time: now }].filter(p => now - p.time < 2000);
+                return [...prev, { x: e.clientX, y: e.clientY, time: now }].filter(p => now - p.time < 1000);
             });
         };
 
@@ -18,7 +18,7 @@ const NeuralCursor: React.FC = () => {
 
         const cleanup = setInterval(() => {
             const now = Date.now();
-            setPoints((prev) => prev.filter(p => now - p.time < 2000));
+            setPoints((prev) => prev.filter(p => now - p.time < 1000));
         }, 100);
 
         return () => {
