@@ -8,9 +8,9 @@ const NeuralCursor: React.FC = () => {
         const handleMouseMove = (e: MouseEvent) => {
             mousePos.current = { x: e.clientX, y: e.clientY };
             setPoints((prev) => {
-                // Limit points for performance, keep only last 1 second
+                // Limit points for performance, keep only last 300ms
                 const now = Date.now();
-                return [...prev, { x: e.clientX, y: e.clientY, time: now }].filter(p => now - p.time < 1000);
+                return [...prev, { x: e.clientX, y: e.clientY, time: now }].filter(p => now - p.time < 300);
             });
         };
 
@@ -18,8 +18,8 @@ const NeuralCursor: React.FC = () => {
 
         const cleanup = setInterval(() => {
             const now = Date.now();
-            setPoints((prev) => prev.filter(p => now - p.time < 1000));
-        }, 100);
+            setPoints((prev) => prev.filter(p => now - p.time < 300));
+        }, 50);
 
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
@@ -51,8 +51,8 @@ const NeuralCursor: React.FC = () => {
                 <path
                     d={pathData}
                     fill="none"
-                    stroke="rgba(59, 130, 246, 0.15)"
-                    strokeWidth="6"
+                    stroke="rgba(59, 130, 246, 0.1)"
+                    strokeWidth="4"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     filter="url(#glow)"
@@ -62,8 +62,8 @@ const NeuralCursor: React.FC = () => {
                 <path
                     d={pathData}
                     fill="none"
-                    stroke="rgba(59, 130, 246, 0.4)"
-                    strokeWidth="1.5"
+                    stroke="rgba(59, 130, 246, 0.3)"
+                    strokeWidth="1"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                 />
