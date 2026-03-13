@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { topics } from "../data/mockData";
 
 interface SidebarProps {
@@ -23,10 +24,13 @@ const Sidebar: React.FC<SidebarProps> = ({ theme, onTopicSelect }) => {
           </div>
         </div>
 
-        <button className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-xs font-bold transition-all bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40">
+        <Link
+          to="/spaces"
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-xs font-bold transition-all bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-500 dark:hover:text-white border border-blue-100 dark:border-blue-900/50"
+        >
           <i className="fa-solid fa-plus text-[10px]"></i>
           Join Space
-        </button>
+        </Link>
       </div>
 
       {/* Focus Areas */}
@@ -43,8 +47,8 @@ const Sidebar: React.FC<SidebarProps> = ({ theme, onTopicSelect }) => {
             key={topic.id}
             onClick={() => onTopicSelect(topic.name)}
             className={`flex items-center gap-3 py-2.5 px-4 rounded-2xl cursor-pointer transition-all border-l-2 border-transparent group ${theme === "dark"
-                ? "hover:bg-blue-900/10 hover:text-blue-400 hover:border-blue-500 text-slate-400"
-                : "hover:bg-blue-50 hover:text-blue-600 hover:border-blue-500 text-slate-600"
+              ? "hover:bg-blue-900/10 hover:text-blue-400 hover:border-blue-500 text-slate-400"
+              : "hover:bg-blue-50 hover:text-blue-600 hover:border-blue-500 text-slate-600"
               }`}
           >
             <div className={`w-7 h-7 flex items-center justify-center rounded-xl transition-all ${theme === "dark" ? "bg-slate-800/80 group-hover:bg-blue-900/30" : "bg-slate-100 group-hover:bg-white"
