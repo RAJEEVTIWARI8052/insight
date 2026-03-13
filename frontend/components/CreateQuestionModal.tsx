@@ -23,7 +23,7 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [topic, setTopic] = useState("Malware Analysis");
+  const [topic, setTopic] = useState("Auto-Detecting...");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isAutoDetecting, setIsAutoDetecting] = useState(true);
   const [autoResolvedData, setAutoResolvedData] = useState<{ expertResponse: string; topic: string } | null>(null);
@@ -59,13 +59,13 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
 
     const text = (title + " " + content).toLowerCase();
     const mappings = [
-      { topic: "Malware Analysis", keywords: ["virus", "worm", "ransomware", "trojan", "malware", "reverse", "forensic", "payload", "obfuscation"] },
-      { topic: "Network Security", keywords: ["firewall", "vlan", "network", "dns", "ip", "proxy", "packet", "sniffing", "wifi", "port", "vpn"] },
-      { topic: "Penetration Testing", keywords: ["kali", "metasploit", "pentest", "vulnerability", "scanner", "exploit", "red team", "burp", "nmap"] },
-      { topic: "Cryptography", keywords: ["encryption", "decryption", "hash", "crypto", "sha256", "aes", "rsa", "kyber", "quantum", "tls", "ssl"] },
-      { topic: "DevSecOps", keywords: ["ci/cd", "pipeline", "docker", "kubernetes", "terraform", "automation", "jenkins", "github actions"] },
-      { topic: "Web Exploitation", keywords: ["xss", "sql", "injection", "csrf", "owasp", "header", "cookie", "bypass", "web", "appsec", "html", "js"] },
-      { topic: "Incident Response", keywords: ["attack", "breached", "alert", "soc", "log", "monitor", "response", "triage", "incident", "siem", "splunk"] }
+      { topic: "Malware Analysis", keywords: ["virus", "worm", "ransomware", "trojan", "malware", "reverse", "forensic", "payload", "obfuscation", "spyware", "adware", "rootkit", "backdoor", "emotet", "cobalt strike", "binary", "assembly"] },
+      { topic: "Network Security", keywords: ["firewall", "vlan", "network", "dns", "ip", "proxy", "packet", "sniffing", "wifi", "port", "vpn", "router", "switch", "ips", "ids", "tcp", "udp", "icmp", "arp"] },
+      { topic: "Penetration Testing", keywords: ["kali", "metasploit", "pentest", "vulnerability", "scanner", "exploit", "red team", "burp", "nmap", "privilege escalation", "lateral movement", "bypass", "payload", "poc"] },
+      { topic: "Cryptography", keywords: ["encryption", "decryption", "hash", "crypto", "sha256", "aes", "rsa", "kyber", "quantum", "tls", "ssl", "cipher", "pkc", "steganography", "signature", "md5"] },
+      { topic: "DevSecOps", keywords: ["ci/cd", "pipeline", "docker", "kubernetes", "terraform", "automation", "jenkins", "github actions", "k8s", "container", "microservices", "sast", "dast", "iac"] },
+      { topic: "Web Exploitation", keywords: ["xss", "sql", "injection", "csrf", "owasp", "header", "cookie", "bypass", "web", "appsec", "html", "js", "directory traversal", "lfi", "rfi", "brute force", "ssrf"] },
+      { topic: "Incident Response", keywords: ["attack", "breached", "alert", "soc", "log", "monitor", "response", "triage", "incident", "siem", "splunk", "forensics", "endpoint", "edr", "compromise", "threat hunting"] }
     ];
 
     for (const mapping of mappings) {
@@ -266,10 +266,10 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
                         setIsAutoDetecting(false);
                       }}
                       className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${topic === t.name
-                          ? "bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/20"
-                          : theme === "dark"
-                            ? "bg-slate-950/40 border-slate-800 text-slate-500 hover:border-slate-600"
-                            : "bg-slate-100 border-slate-200 text-slate-400 hover:border-slate-300"
+                        ? "bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/20"
+                        : theme === "dark"
+                          ? "bg-slate-950/40 border-slate-800 text-slate-500 hover:border-slate-600"
+                          : "bg-slate-100 border-slate-200 text-slate-400 hover:border-slate-300"
                         }`}
                     >
                       {t.name}
