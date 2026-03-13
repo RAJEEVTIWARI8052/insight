@@ -12,6 +12,7 @@ import { initialQuestions } from "./data/mockData";
 import NotificationsPage from "./pages/NotificationPage";
 import SpacesPage from "./pages/SpacePage";
 import Navbar from "./components/Navbar";
+import NeuralCursor from "./components/NeuralCursor";
 import axios from "axios";
 
 const STORAGE_KEY = "codevirus_data";
@@ -165,6 +166,7 @@ const App: React.FC = () => {
         : "bg-slate-50 text-slate-900"
         }`}
     >
+      <NeuralCursor />
       <Navbar
         onOpenModal={() => openModal("ask")}
         onSearch={setSearchQuery}
