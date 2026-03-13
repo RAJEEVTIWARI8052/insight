@@ -18,6 +18,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, theme, currentUse
   const [upvotes, setUpvotes] = React.useState(question.upvotes?.length || 0);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [isExpertModalOpen, setIsExpertModalOpen] = React.useState(false);
+  const [showToast, setShowToast] = React.useState(false);
 
   const isAuthor = currentUser && (currentUser.id === question.author?.id || currentUser.id === question.author?._id);
   const isExpert = currentUser?.role === 'expert';
@@ -75,6 +76,17 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, theme, currentUse
     } catch (e) {
       console.error("Failed to post expert response", e);
     }
+  };
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const url = `${window.location.origin}/question/${question._id || question.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
+      setIsMenuOpen(false);
+    });
   };
 
   const handleIconClick = (e: React.MouseEvent) => {
@@ -135,7 +147,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, theme, currentUse
                   </button>
                 )}
                 <button
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={handleShare}
                   className={`flex items-center gap-2 px-4 py-2.5 text-sm w-full text-left font-semibold transition-colors ${theme === 'dark' ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-50'
                     }`}
                 >
@@ -146,6 +158,16 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, theme, currentUse
             )}
           </div>
         </div>
+
+        {/* Toast Notification */}
+        {showToast && (
+          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-bounce-subtle">
+            <div className="bg-blue-600 text-white px-6 py-2.5 rounded-2xl shadow-2xl flex items-center gap-2 font-black text-xs uppercase tracking-widest border border-blue-400">
+              <i className="fa-solid fa-check-circle"></i>
+              Network Link Copied
+            </div>
+          </div>
+        )}
 
         <Link to={`/question/${question.id}`} className="block">
           <h2
@@ -250,7 +272,10 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, theme, currentUse
               <span className="text-xs">{question.answers?.length || 0}</span>
             </Link>
 
-            <button className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all hover:text-indigo-500">
+            <button
+              onClick={handleShare}
+              className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all hover:text-indigo-500"
+            >
               <i className="fa-solid fa-share-nodes text-base"></i>
             </button>
           </div>

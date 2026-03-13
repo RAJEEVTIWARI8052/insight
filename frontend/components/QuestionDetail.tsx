@@ -22,6 +22,7 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
   const [isQuestionMenuOpen, setIsQuestionMenuOpen] = useState(false);
   const [openAnswerMenuId, setOpenAnswerMenuId] = useState<string | null>(null);
   const [isExpertModalOpen, setIsExpertModalOpen] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   const question = questions.find(q => q.id === id || q._id === id);
   console.log("QuestionDetail Render - Role:", currentUser?.role, "Expert Mode:", currentUser?.role === 'expert', "Question Found:", !!question);
@@ -121,6 +122,16 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
     }
   };
 
+  const handleShare = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      setIsQuestionMenuOpen(false);
+      setOpenAnswerMenuId(null);
+    });
+  };
+
   return (
     <div className="flex flex-col gap-4 max-w-4xl mx-auto pt-20 px-4">
       <div className={`rounded-lg border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
@@ -161,7 +172,7 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
                   </button>
                 )}
                 <button
-                  onClick={() => setIsQuestionMenuOpen(false)}
+                  onClick={handleShare}
                   className={`flex items-center gap-2 px-4 py-2 text-sm w-full text-left ${theme === 'dark' ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-700 hover:bg-slate-100'
                     }`}
                 >
@@ -172,6 +183,18 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
             )}
           </div>
         </div>
+
+        {/* Premium Toast */}
+        {showToast && (
+          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-bounce-subtle">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-2xl shadow-2xl flex items-center gap-3 font-black text-xs uppercase tracking-widest border border-blue-400/30 backdrop-blur-md">
+              <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
+                <i className="fa-solid fa-link text-[10px]"></i>
+              </div>
+              Intelligence Link Copied
+            </div>
+          </div>
+        )}
 
         <h1 className={`text-2xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{question.title}</h1>
         {question.content && <p className={`mb-6 whitespace-pre-wrap ${theme === 'dark' ? 'text-slate-300' : 'text-gray-800'}`}>{question.content}</p>}
@@ -206,7 +229,7 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
           </button>
 
           <div className="flex items-center gap-4 ml-auto text-gray-400">
-            <i className="fa-solid fa-share cursor-pointer hover:text-gray-600"></i>
+            <i onClick={handleShare} className="fa-solid fa-share cursor-pointer hover:text-blue-500 transition-colors"></i>
           </div>
         </div>
 
@@ -323,7 +346,7 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
                     </div>
                     <i className="fa-solid fa-arrow-down cursor-pointer hover:bg-gray-100 p-2 rounded-full transition-colors"></i>
                     <i className="fa-regular fa-comment cursor-pointer hover:bg-gray-100 p-2 rounded-full transition-colors ml-auto"></i>
-                    <i className="fa-solid fa-share cursor-pointer hover:bg-gray-100 p-2 rounded-full transition-colors"></i>
+                    <i onClick={handleShare} className="fa-solid fa-share cursor-pointer hover:text-blue-500 hover:bg-gray-100 p-2 rounded-full transition-colors"></i>
                   </div>
                 </div>
               );
