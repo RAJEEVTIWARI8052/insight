@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/clerk-react";
 
@@ -17,125 +17,134 @@ const Navbar: React.FC<NavbarProps> = ({
   onSearch,
   theme,
   onToggleTheme,
-  onToggleRole,
-  userRole,
-  notificationsCount = 0
+  notificationsCount = 0,
 }) => {
   const location = useLocation();
+  const [searchFocused, setSearchFocused] = useState(false);
 
   const navLinks = [
-    { to: "/", icon: "fa-house", label: "Home" },
-    { to: "/following", icon: "fa-user-group", label: "Network" },
-    { to: "/spaces", icon: "fa-layer-group", label: "Spaces" },
-    { to: "/notifications", icon: "fa-bell", label: "Notifications" },
+    { to: "/",             icon: "fa-house",           label: "Home"          },
+    { to: "/following",    icon: "fa-user-group",      label: "Network"       },
+    { to: "/experts",      icon: "fa-users-viewfinder",label: "Experts"       },
+    { to: "/spaces",       icon: "fa-shuttle-space",   label: "Spaces"        },
+    { to: "/notifications",icon: "fa-bell",            label: "Notifications" },
   ];
+
+  const dark = theme === "dark";
 
   return (
     <nav
-      className={`fixed top-0 w-full z-50 border-b glass animate-fade-down shadow-xl transition-all duration-700 ${theme === "dark" ? "border-slate-800/80" : "border-slate-200/80"
-        }`}
+      className={`fixed top-0 w-full z-50 h-14 flex items-center border-b transition-colors duration-300 ${
+        dark
+          ? "bg-[#1A1A1B] border-slate-700/60"
+          : "bg-white border-slate-200"
+      }`}
     >
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-6">
+      <div className="w-full flex items-center px-3 gap-2">
 
-        {/* Left Section */}
-        <div className="flex items-center gap-8">
-          {/* Logo with Animated Glow */}
-          <Link to="/" className="flex items-center gap-3 group relative">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center transform group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 shadow-lg shadow-blue-500/40 relative z-10">
-              <i className="fa-solid fa-virus-slash text-white text-xl"></i>
-              <div className="absolute inset-0 bg-blue-400 rounded-2xl blur-lg opacity-0 group-hover:opacity-40 transition-opacity"></div>
-            </div>
-            <span className="text-2xl font-bold font-outfit tracking-tighter bg-gradient-to-r from-blue-500 via-indigo-400 to-purple-500 bg-clip-text text-transparent group-hover:tracking-normal transition-all duration-500">
-              Insight
-            </span>
-          </Link>
-
-          {/* Navigation Items with Staggered Hover */}
-          <div className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`relative px-4 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 flex items-center gap-2.5 group/nav ${location.pathname === link.to
-                  ? "text-blue-500 bg-blue-500/10"
-                  : "text-slate-500 hover:text-blue-500 hover:bg-slate-100/50 dark:hover:bg-blue-900/10"
-                  }`}
-              >
-                <i className={`fa-solid ${link.icon} text-lg transform group-hover/nav:scale-110 group-hover/nav:-translate-y-0.5 transition-transform`}></i>
-                <span className="font-outfit">{link.label}</span>
-
-                {link.to === "/notifications" && notificationsCount > 0 && (
-                  <span className="absolute top-1.5 right-2 w-4 h-4 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full animate-pulse border-2 border-white dark:border-slate-900 font-black">
-                    {notificationsCount > 9 ? '9+' : notificationsCount}
-                  </span>
-                )}
-
-                {location.pathname === link.to && (
-                  <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></span>
-                )}
-              </Link>
-            ))}
+        {/* ── Logo ── */}
+        <Link
+          to="/"
+          className="flex items-center gap-2 shrink-0 mr-2 group"
+        >
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform group-hover:scale-105 ${dark ? "bg-blue-500" : "bg-blue-600"}`}>
+            <i className="fa-solid fa-code-branch text-white text-sm"></i>
           </div>
-        </div>
+          <span className={`hidden sm:block text-lg font-extrabold tracking-tight ${dark ? "text-white" : "text-slate-900"}`}>
+            insight
+          </span>
+        </Link>
 
-        {/* Search Bar - Animated Expansion */}
-        <div className="flex-1 max-w-sm relative group hidden md:block">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors z-10">
-            <i className="fa-solid fa-magnifying-glass text-sm"></i>
-          </div>
+        {/* ── Search Bar (Reddit-style wide, centered feel) ── */}
+        <div className={`flex-1 max-w-2xl relative flex items-center rounded-full border transition-all duration-200 ${
+          searchFocused
+            ? dark ? "border-blue-500 bg-slate-900" : "border-blue-500 bg-white shadow-sm"
+            : dark ? "border-slate-600 bg-slate-800 hover:border-slate-500" : "border-slate-300 bg-slate-100 hover:border-slate-400"
+        }`}>
+          <i className={`fa-solid fa-magnifying-glass absolute left-4 text-sm transition-colors ${searchFocused ? "text-blue-500" : "text-slate-400"}`}></i>
           <input
             type="text"
-            placeholder="Search insights..."
+            placeholder="Search Insight..."
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
             onChange={(e) => onSearch(e.target.value)}
-            className={`w-full pl-11 pr-4 py-2.5 rounded-2xl border text-sm transition-all duration-500 ${theme === "dark"
-              ? "bg-slate-900/40 border-slate-700/50 text-white placeholder-slate-500 group-hover:border-slate-500/50 group-focus-within:bg-slate-900"
-              : "bg-slate-100/50 border-slate-200 text-slate-900 placeholder-slate-400 group-hover:border-blue-300 group-focus-within:bg-white"
-              } focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:w-[105%] -translate-x-0 focus:-translate-x-[2.5%]`}
+            className={`w-full pl-10 pr-4 py-2 bg-transparent text-sm rounded-full focus:outline-none ${
+              dark ? "text-slate-100 placeholder-slate-500" : "text-slate-900 placeholder-slate-400"
+            }`}
           />
         </div>
 
-        {/* Right Section */}
-        <div className="flex items-center gap-3">
-          {/* Theme Toggle with Rotation */}
+        {/* ── Center Nav Icons (Reddit-style icon tabs) ── */}
+        <div className="hidden md:flex items-center ml-2">
+          {navLinks.map((link) => {
+            const active = location.pathname === link.to;
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                title={link.label}
+                className={`relative w-12 h-10 flex flex-col items-center justify-center rounded-lg transition-all duration-150 group ${
+                  active
+                    ? dark
+                      ? "text-white border-b-2 border-blue-500"
+                      : "text-blue-600 border-b-2 border-blue-600"
+                    : dark
+                      ? "text-slate-400 hover:bg-slate-700/50 hover:text-slate-200"
+                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+              >
+                <i className={`fa-solid ${link.icon} text-lg`}></i>
+                {link.to === "/notifications" && notificationsCount > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full font-black leading-none">
+                    {notificationsCount > 9 ? "9+" : notificationsCount}
+                  </span>
+                )}
+                {/* Tooltip */}
+                <span className={`absolute top-full mt-1.5 text-[10px] font-semibold px-2 py-0.5 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap ${
+                  dark ? "bg-slate-700 text-slate-200" : "bg-slate-800 text-white"
+                }`}>
+                  {link.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* ── Right Section ── */}
+        <div className="flex items-center gap-2 ml-auto shrink-0">
+          {/* Theme toggle */}
           <button
             onClick={onToggleTheme}
-            className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-90 ${theme === "dark"
-              ? "bg-slate-800 text-yellow-400 hover:shadow-[0_0_20px_rgba(250,204,21,0.2)]"
-              : "bg-slate-100 text-slate-600 hover:shadow-xl"
-              }`}
+            title="Toggle theme"
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+              dark
+                ? "text-slate-400 hover:bg-slate-700 hover:text-yellow-400"
+                : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+            }`}
           >
-            <i className={`fa-solid ${theme === "dark" ? "fa-sun" : "fa-moon"} text-xl transform transition-transform duration-700 ${theme === 'dark' ? 'rotate-180' : 'rotate-0'}`}></i>
+            <i className={`fa-solid ${dark ? "fa-sun" : "fa-moon"} text-base`}></i>
           </button>
 
           <SignedIn>
-            <button
-              onClick={onToggleRole}
-              className={`hidden sm:flex items-center gap-2.5 px-4 py-2.5 text-xs font-black uppercase tracking-wider rounded-2xl transition-all duration-500 border relative overflow-hidden group/expert ${userRole === 'expert'
-                ? "bg-gradient-to-r from-purple-600 to-indigo-600 border-purple-400 text-white shadow-lg shadow-purple-500/30"
-                : "bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:border-purple-400"
-                }`}
-            >
-              <div className="shimmer-btn absolute inset-0 opacity-0 group-hover/expert:opacity-100 transition-opacity"></div>
-              <i className={`fa-solid ${userRole === 'expert' ? 'fa-user-tie' : 'fa-user-astronaut'} text-sm z-10`}></i>
-              <span className="z-10 font-outfit">
-                {userRole === 'expert' ? 'Expert Active' : 'Switch to Expert'}
-              </span>
-            </button>
-
-            {/* Ask Button - Pulse Effect */}
+            {/* Create post / Ask button — Reddit orange pill */}
             <button
               onClick={onOpenModal}
-              className="hidden sm:flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-black rounded-2xl transition-all shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-1 active:translate-y-0 active:scale-95"
+              className={`hidden sm:flex items-center gap-1.5 px-4 py-1.5 rounded-full border font-bold text-sm transition-all ${
+                dark
+                  ? "border-slate-500 text-slate-200 hover:border-slate-300 hover:bg-slate-700"
+                  : "border-slate-400 text-slate-800 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700"
+              }`}
             >
-              <i className="fa-solid fa-plus-circle text-base"></i>
-              <span className="font-outfit uppercase tracking-tight">Ask Issue</span>
+              <i className="fa-solid fa-plus text-xs"></i>
+              Create
             </button>
 
-            <div className="flex items-center border-l border-slate-200 dark:border-slate-800 pl-4 ml-2">
+            {/* Avatar */}
+            <div className={`pl-2 border-l ${dark ? "border-slate-700" : "border-slate-200"}`}>
               <UserButton
                 appearance={{
                   elements: {
-                    userButtonAvatarBox: "w-10 h-10 rounded-2xl border-2 border-white dark:border-slate-800 shadow-md",
+                    userButtonAvatarBox: "w-9 h-9 rounded-full border-2 border-transparent hover:border-blue-500 transition-all",
                   }
                 }}
                 afterSignOutUrl="/"
@@ -144,18 +153,20 @@ const Navbar: React.FC<NavbarProps> = ({
           </SignedIn>
 
           <SignedOut>
-            <div className="flex items-center gap-3">
-              <SignInButton mode="modal">
-                <button className="px-5 py-2.5 text-blue-500 font-bold text-sm hover:bg-blue-500/5 rounded-2xl transition-all">
-                  Login
-                </button>
-              </SignInButton>
-              <SignInButton mode="modal">
-                <button className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm rounded-2xl transition-all shadow-xl shadow-blue-500/20 active:scale-95">
-                  Get Started
-                </button>
-              </SignInButton>
-            </div>
+            <SignInButton mode="modal">
+              <button className={`px-4 py-1.5 rounded-full border font-bold text-sm transition-all ${
+                dark
+                  ? "border-blue-500 text-blue-400 hover:bg-blue-900/20"
+                  : "border-blue-600 text-blue-600 hover:bg-blue-50"
+              }`}>
+                Log In
+              </button>
+            </SignInButton>
+            <SignInButton mode="modal">
+              <button className="px-4 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all">
+                Sign Up
+              </button>
+            </SignInButton>
           </SignedOut>
         </div>
 

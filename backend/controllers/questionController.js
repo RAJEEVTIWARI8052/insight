@@ -50,7 +50,7 @@ export const checkDuplicate = async (req, res) => {
 
 export const createQuestion = async (req, res) => {
   try {
-    const { title, content, topic, imageUrl } = req.body;
+    const { title, content, topic, imageUrl, mentionedExpertId } = req.body;
 
     console.log("--- CREATE QUESTION START ---");
     console.log("Body:", req.body);
@@ -82,6 +82,7 @@ export const createQuestion = async (req, res) => {
         category,
         imageUrl: imageUrl || "",
         author: req.user?._id,
+        mentionedExpertId: mentionedExpertId || null,
         expertResponse: existingQuestion.expertResponse,
         status: "answered"
       });
@@ -104,8 +105,19 @@ export const createQuestion = async (req, res) => {
       topic: topic || category,
       category,
       imageUrl: imageUrl || "",
-      author: req.user?._id
+      author: req.user?._id,
+      mentionedExpertId: mentionedExpertId || null
     });
+
+    if (mentionedExpertId) {
+      await Notification.create({
+        recipient: mentionedExpertId,
+        sender: req.user?._id,
+        type: "mention",
+        message: `You were mentioned in a new inquiry: "${title}"`,
+        link: `/question/${question._id}`
+      });
+    }
 
     console.log("Successfully created question:", question._id);
     console.log("--- CREATE QUESTION END ---");
@@ -119,7 +131,10 @@ export const createQuestion = async (req, res) => {
 
 export const getAllQuestions = async (req, res) => {
   try {
-    const questions = await Question.find().populate("author", "name email").sort({ createdAt: -1 });
+    const questions = await Question.find()
+      .populate("author", "name email")
+      .populate("responses.author", "name email")
+      .sort({ createdAt: -1 });
     res.status(200).json(questions);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -173,11 +188,6 @@ export const deleteQuestion = async (req, res) => {
 
     if (!question) {
       return res.status(404).json({ message: "Issue not found." });
-    }
-
-    // Allow author or expert to delete
-    if (question.author.toString() !== req.user?._id.toString() && req.user?.role !== "expert") {
-      return res.status(403).json({ message: "Not authorized to delete this issue." });
     }
 
     await Question.findByIdAndDelete(id);
@@ -240,6 +250,46 @@ export const downvoteQuestion = async (req, res) => {
 
     res.status(200).json(question);
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const addAnswer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ message: "Answer content is required." });
+    }
+
+    const question = await Question.findById(id);
+    if (!question) return res.status(404).json({ message: "Question not found." });
+
+    const newResponse = { text: content.trim(), author: req.user._id, createdAt: new Date() };
+    question.responses.push(newResponse);
+    question.answerCount = question.responses.length;
+    await question.save();
+
+    // Populate author info for the full response
+    const updatedQuestion = await Question.findById(id)
+      .populate("author", "name email")
+      .populate("responses.author", "name email");
+
+    // Notify the question author (if different user)
+    if (question.author && question.author.toString() !== req.user._id.toString()) {
+      await Notification.create({
+        recipient: question.author,
+        sender: req.user._id,
+        type: "answer",
+        message: `Someone answered your question: "${question.title}"`,
+        link: `/question/${question._id}`
+      });
+    }
+
+    res.status(200).json(updatedQuestion);
+  } catch (error) {
+    console.error("Add Answer Error:", error);
     res.status(500).json({ message: error.message });
   }
 };

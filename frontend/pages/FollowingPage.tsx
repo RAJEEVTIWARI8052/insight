@@ -8,41 +8,18 @@ interface Props {
 
 const FollowingPage: React.FC<Props> = ({ theme, onSearchChange }) => {
   return (
-    <main className="max-w-6xl mx-auto pt-20 px-4 flex gap-6">
-
-      {/* Sidebar */}
-      <div className="hidden md:block w-48 shrink-0">
-        <Sidebar theme={theme} onTopicSelect={(topic) => onSearchChange(topic)} />
-      </div>
-
-      {/* Feed */}
-      <div className="flex-1 max-w-2xl">
-
-        <div
-          className={`p-6 rounded-lg border text-center ${
-            theme === "dark"
-              ? "bg-slate-900 border-slate-800 text-slate-200"
-              : "bg-white border-slate-200 text-slate-900"
-          }`}
-        >
+    <main className={`w-full pt-20 px-2 pb-12 min-h-screen ${theme === 'dark' ? 'bg-[#0B0F19] text-slate-200' : 'bg-slate-50 text-slate-900'}`}>
+      <div className="w-full">
+        <div className={`p-4 md:p-6 mb-8 mt-16 rounded-2xl border transition-colors ${theme === 'dark' ? 'bg-[#131A2B] border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+          <p className="text-sm">You are viewing topics you follow in a professional layout.</p>
           <h2 className="text-xl font-semibold mb-2">
             You've reached the end of your feed
           </h2>
-
-          <p
-            className={`text-sm ${
-              theme === "dark" ? "text-slate-400" : "text-slate-500"
-            }`}
-          >
+          <p className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
             Follow more spaces to discover new cybersecurity discussions.
           </p>
         </div>
-
       </div>
-
-      {/* Right Panel */}
-      <div className="hidden lg:block w-72 shrink-0"></div>
-
     </main>
   );
 };

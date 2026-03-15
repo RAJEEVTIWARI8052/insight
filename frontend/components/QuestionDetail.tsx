@@ -29,9 +29,10 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
 
   if (!question) {
     return (
-      <div className={`p-8 rounded-lg shadow-sm text-center ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'} border mt-20`}>
-        <p className={theme === 'dark' ? 'text-white' : 'text-slate-900'}>Question not found.</p>
-        <button onClick={() => navigate('/')} className="mt-4 text-blue-600 font-medium">Back to Home</button>
+      <div className={`flex flex-col items-center justify-center h-[50vh] ${theme === 'dark' ? 'text-slate-200 bg-[#0B0F19]' : 'text-slate-800 bg-slate-50'}`}>
+        <i className={`fa-solid fa-server text-4xl mb-4 ${theme === 'dark' ? 'text-slate-600' : 'text-slate-300'}`}></i>
+        <h2 className="text-2xl font-bold tracking-tight mb-2">Record Not Found</h2>
+        <p className="text-sm text-slate-500">The referenced resource has been removed.</p>
       </div>
     );
   }
@@ -133,8 +134,8 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
   };
 
   return (
-    <div className="flex flex-col gap-4 max-w-4xl mx-auto pt-20 px-4">
-      <div className={`rounded-lg border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+    <div className="flex flex-col gap-4 w-full mx-auto pt-20 px-4 md:px-8 pb-12">
+      <div className={`rounded-lg border shadow-sm p-6 ${theme === 'dark' ? 'bg-[#0B0F19] border-slate-800' : 'bg-white border-gray-200'}`}>
         <div className="flex items-center gap-2 mb-4">
           <img src={question.author?.avatar || "https://i.pravatar.cc/40"} alt="author" className="w-10 h-10 rounded-full" />
           <div className="flex flex-col">
@@ -144,7 +145,7 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
             </span>
           </div>
           {question.category && (
-            <span className="ml-auto bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+            <span className={`px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide border ${theme === 'dark' ? 'bg-blue-900/30 text-blue-400 border-blue-800/50' : 'bg-blue-50 text-blue-600 border-blue-200'}`}>
               {question.category}
             </span>
           )}
@@ -157,7 +158,7 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
               <i className="fa-solid fa-ellipsis"></i>
             </button>
             {isQuestionMenuOpen && (
-              <div className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 z-10 border ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+              <div className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 z-10 border ${theme === 'dark' ? 'bg-[#131A2B] border-slate-800' : 'bg-white border-slate-200'
                 }`}>
                 {canDeleteQuestion && (
                   <button
@@ -173,7 +174,7 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
                 )}
                 <button
                   onClick={handleShare}
-                  className={`flex items-center gap-2 px-4 py-2 text-sm w-full text-left ${theme === 'dark' ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-700 hover:bg-slate-100'
+                  className={`flex items-center gap-2 px-4 py-2 text-sm w-full text-left ${theme === 'dark' ? 'text-blue-400 hover:bg-blue-900/20' : 'text-slate-700 hover:bg-slate-100'
                     }`}
                 >
                   <i className="fa-solid fa-share"></i>
@@ -187,7 +188,7 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
         {/* Premium Toast */}
         {showToast && (
           <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-bounce-subtle">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-2xl shadow-2xl flex items-center gap-3 font-black text-xs uppercase tracking-widest border border-blue-400/30 backdrop-blur-md">
+            <div className={`text-white px-8 py-3 rounded-2xl shadow-2xl flex items-center gap-3 font-black text-xs uppercase tracking-widest border backdrop-blur-md ${theme === 'dark' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 border-blue-400/30' : 'bg-gradient-to-r from-blue-600 to-indigo-600 border-blue-400/30'}`}>
               <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
                 <i className="fa-solid fa-link text-[10px]"></i>
               </div>
@@ -201,46 +202,42 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
         {question.imageUrl && <img src={question.imageUrl} className="w-full rounded-lg mb-6 shadow-sm border border-slate-800" alt="main" />}
 
         {/* Expert Response Section */}
-        {question.expertResponse && (
-          <div className={`mb-8 p-6 rounded-3xl border-l-[6px] shadow-xl relative overflow-hidden group/detail-expert ${theme === 'dark'
-            ? 'bg-emerald-950/30 border-emerald-500/60 text-emerald-50'
-            : 'bg-emerald-50 border-emerald-200 text-emerald-900'
-            }`}>
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover/detail-expert:opacity-10 transition-opacity">
-              <i className="fa-solid fa-certificate text-6xl"></i>
-            </div>
-            <h4 className="text-xs font-black uppercase tracking-[0.3em] mb-4 flex items-center gap-2.5 font-outfit">
-              <div className="w-7 h-7 bg-emerald-500 rounded-xl flex items-center justify-center shadow-xl shadow-emerald-500/30">
-                <i className="fa-solid fa-user-check text-xs text-white"></i>
+          {question.expertResponse && (
+            <div className={`mb-8 p-6 rounded-2xl border relative overflow-hidden ${theme === 'dark' ? 'bg-[#0A1A1B] border-emerald-900/50' : 'bg-emerald-50 border-emerald-200'}`}>
+              <div className={`absolute top-0 left-0 w-1.5 h-full ${theme === 'dark' ? 'bg-emerald-500' : 'bg-emerald-600'}`}></div>
+              <div className="flex justify-between items-center mb-4">
+                 <h3 className={`text-sm font-bold uppercase tracking-widest flex items-center gap-2 ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                    <i className="fa-solid fa-badge-check"></i> Expert Resolution
+                 </h3>
               </div>
-              Official Expert Resolution
-            </h4>
-            <p className="text-base leading-relaxed font-semibold relative z-10">{question.expertResponse}</p>
-          </div>
-        )}
+              <div className={`pl-4 text-base leading-relaxed ${theme === 'dark' ? 'text-emerald-100/90' : 'text-emerald-900'}`}>
+                 {question.expertResponse}
+              </div>
+            </div>
+          )}
 
         <div className={`flex items-center gap-3 border-b pb-6 ${theme === 'dark' ? 'border-slate-800' : 'border-gray-100'}`}>
           <button
             disabled={isGenerating}
-            className={`flex items-center gap-2 bg-blue-50 text-blue-700 px-5 py-2 rounded-full font-semibold transition-all shadow-sm ${isGenerating ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-100'}`}
+            className={`flex items-center gap-2 px-5 py-2 rounded-full font-semibold transition-all shadow-sm ${theme === 'dark' ? 'bg-blue-900/30 text-blue-400 hover:bg-blue-900/50' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'} ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {isGenerating ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-sparkles"></i>}
             {isGenerating ? 'Thinking...' : 'Get AI Answer'}
           </button>
 
           <div className="flex items-center gap-4 ml-auto text-gray-400">
-            <i onClick={handleShare} className="fa-solid fa-share cursor-pointer hover:text-blue-500 transition-colors"></i>
+            <i onClick={handleShare} className={`fa-solid fa-share cursor-pointer transition-colors ${theme === 'dark' ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}></i>
           </div>
         </div>
 
         {/* Expert Response Input Button */}
         {currentUser?.role === 'expert' && (!question.expertResponse || question.expertResponse === "") && (
-          <div className={`mt-8 p-8 rounded-3xl border border-dashed flex flex-col items-center justify-center text-center animate-fade-down ${theme === 'dark' ? 'bg-slate-800/20 border-slate-700' : 'bg-blue-50/30 border-blue-200'
+          <div className={`mt-8 p-8 rounded-3xl border border-dashed flex flex-col items-center justify-center text-center animate-fade-down ${theme === 'dark' ? 'bg-emerald-900/10 border-emerald-900/40' : 'bg-blue-50/30 border-blue-200'
             }`}>
-            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-4 shadow-xl shadow-green-500/20">
-              <i className="fa-solid fa-user-tie text-2xl text-white"></i>
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-xl ${theme === 'dark' ? 'bg-gradient-to-br from-emerald-600 to-cyan-600 shadow-emerald-600/30' : 'bg-gradient-to-br from-green-500 to-emerald-600 shadow-green-500/20'}`}>
+              <i className={`fa-solid fa-user-tie text-2xl ${theme === 'dark' ? 'text-white' : 'text-white'}`}></i>
             </div>
-            <h3 className={`font-black text-xl font-outfit mb-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+            <h3 className={`font-black text-xl font-outfit mb-2 ${theme === 'dark' ? 'text-emerald-300' : 'text-slate-900'}`}>
               Expert Perspective Needed
             </h3>
             <p className={`text-sm mb-6 max-w-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
@@ -248,7 +245,7 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
             </p>
             <button
               onClick={() => setIsExpertModalOpen(true)}
-              className="px-8 py-3.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-black rounded-2xl transition-all shadow-xl shadow-green-600/30 hover:-translate-y-1 active:scale-95 flex items-center gap-2"
+              className={`px-8 py-3.5 font-black rounded-2xl transition-all shadow-xl active:scale-95 flex items-center gap-2 ${theme === 'dark' ? 'bg-gradient-to-r from-emerald-600 to-cyan-600 hover:brightness-110 text-white shadow-emerald-600/30' : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-green-600/30 hover:-translate-y-1'}`}
             >
               <i className="fa-solid fa-plus-circle"></i>
               Post Solution
@@ -266,14 +263,14 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
               <img src={currentUser?.avatar || "https://i.pravatar.cc/40"} className="w-10 h-10 rounded-full" alt="me" />
               <div className="flex-1">
                 <textarea
-                  className={`w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-200'}`}
+                  className={`w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 transition-all ${theme === 'dark' ? 'bg-[#0B0F19] border-slate-800 text-slate-200 focus:ring-blue-400' : 'bg-white border-gray-200 focus:ring-blue-500'}`}
                   placeholder="Share your perspective..."
                   rows={4}
                   value={answerContent}
                   onChange={(e) => setAnswerContent(e.target.value)}
                 ></textarea>
                 <div className="flex justify-end mt-2">
-                  <button onClick={handleSubmitAnswer} className="bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors">
+                  <button onClick={handleSubmitAnswer} className={`px-6 py-2 rounded-full font-semibold transition-colors ${theme === 'dark' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
                     Post Answer
                   </button>
                 </div>
@@ -289,13 +286,13 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
               const canDeleteAns = isAnsAuthor || isExpert;
 
               return (
-                <div key={ansId} className={`p-4 rounded-xl border ${answer.isAI ? (theme === 'dark' ? 'bg-blue-900/20 border-blue-900/40' : 'bg-blue-50 border-blue-100') : (theme === 'dark' ? 'bg-slate-800/40 border-slate-700' : 'bg-white border-gray-100')}`}>
+                <div key={ansId} className={`p-4 rounded-xl border ${answer.isAI ? (theme === 'dark' ? 'bg-blue-900/10 border-blue-900/40' : 'bg-blue-50 border-blue-100') : (theme === 'dark' ? 'bg-[#0B0F19]/40 border-slate-800' : 'bg-white border-gray-100')}`}>
                   <div className="flex items-center gap-2 mb-3">
                     <img src={answer.author?.avatar || "https://i.pravatar.cc/40"} className="w-8 h-8 rounded-full" alt="ans-auth" />
                     <div className="flex flex-col">
                       <span className={`text-sm font-bold flex items-center gap-2 ${theme === 'dark' ? 'text-slate-200' : 'text-gray-800'}`}>
                         {answer.author?.name || 'Anonymous'}
-                        {answer.isAI && <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded-full">AI Verified</span>}
+                        {answer.isAI && <span className={`text-[10px] text-white px-1.5 py-0.5 rounded-full ${theme === 'dark' ? 'bg-blue-600' : 'bg-blue-600'}`}>AI Verified</span>}
                       </span>
                       <span className="text-[10px] text-gray-400">
                         {answer.createdAt ? new Date(answer.createdAt).toLocaleDateString() : answer.timestamp}
@@ -326,7 +323,7 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
                           )}
                           <button
                             onClick={() => setOpenAnswerMenuId(null)}
-                            className={`flex items-center gap-2 px-4 py-2 text-sm w-full text-left ${theme === 'dark' ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-700 hover:bg-slate-100'
+                            className={`flex items-center gap-2 px-4 py-2 text-sm w-full text-left ${theme === 'dark' ? 'text-blue-400 hover:bg-blue-900/20' : 'text-slate-700 hover:bg-slate-100'
                               }`}
                           >
                             <i className="fa-solid fa-share"></i>
@@ -340,13 +337,13 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({ questions, onUpdate, cu
                     {answer.content || answer.text}
                   </div>
                   <div className={`flex items-center gap-4 text-gray-400 border-t pt-3 ${theme === 'dark' ? 'border-slate-800' : 'border-gray-100'}`}>
-                    <div className="flex items-center gap-2 hover:bg-gray-200 py-1 px-3 rounded-full cursor-pointer transition-colors">
+                    <div className={`flex items-center gap-2 py-1 px-3 rounded-full cursor-pointer transition-colors ${theme === 'dark' ? 'hover:bg-blue-900/10 hover:text-blue-400' : 'hover:bg-gray-200'}`}>
                       <i className="fa-solid fa-arrow-up"></i>
                       <span className="text-xs font-bold">{answer.upvotes || 0}</span>
                     </div>
-                    <i className="fa-solid fa-arrow-down cursor-pointer hover:bg-gray-100 p-2 rounded-full transition-colors"></i>
-                    <i className="fa-regular fa-comment cursor-pointer hover:bg-gray-100 p-2 rounded-full transition-colors ml-auto"></i>
-                    <i onClick={handleShare} className="fa-solid fa-share cursor-pointer hover:text-blue-500 hover:bg-gray-100 p-2 rounded-full transition-colors"></i>
+                    <i className={`fa-solid fa-arrow-down cursor-pointer p-2 rounded-full transition-colors ${theme === 'dark' ? 'hover:bg-rose-500/10 hover:text-rose-500' : 'hover:bg-gray-100'}`}></i>
+                    <i className={`fa-regular fa-comment cursor-pointer p-2 rounded-full transition-colors ml-auto ${theme === 'dark' ? 'hover:bg-cyan-500/10 hover:text-cyan-400' : 'hover:bg-gray-100'}`}></i>
+                    <i onClick={handleShare} className={`fa-solid fa-share cursor-pointer p-2 rounded-full transition-colors ${theme === 'dark' ? 'hover:text-[#ff00ff] hover:bg-[#ff00ff]/10' : 'hover:text-blue-500 hover:bg-gray-100'}`}></i>
                   </div>
                 </div>
               );

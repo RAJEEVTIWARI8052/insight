@@ -18,98 +18,37 @@ const Feed: React.FC<FeedProps> = ({ questions = [], theme, onOpenModal, user, o
   const handleBroadcast = () => onOpenModal("broadcast");
 
   return (
-    <div className="flex flex-col gap-4 mb-8">
+    <div className="flex flex-col gap-4 mb-8 w-full">
 
-      {/* Create Post Box */}
-      <div
-        className={`rounded-lg p-4 border shadow-sm flex flex-col gap-3 transition-colors ${theme === "dark"
-          ? "bg-slate-900 border-slate-800"
-          : "bg-white border-slate-200"
-          }`}
-      >
-
-        {/* Input Row */}
-        <div className="flex gap-3">
-
-          <img
-            src="https://picsum.photos/seed/cyber-user/100/100"
-            className="w-10 h-10 rounded-full"
-            alt="avatar"
+      {/* Grid of Readouts */}
+      <div className="grid grid-cols-1 gap-4">
+        {questions.map((question) => (
+          <QuestionCard
+            key={question._id || question.id}
+            question={question}
+            theme={theme}
+            currentUser={user}
+            onDelete={onDelete}
+            onUpdate={onUpdate}
           />
-
-          <input
-            type="text"
-            placeholder="Discovered a vulnerability? Document it here..."
-            readOnly
-            onClick={handleAsk}
-            className={`flex-1 border rounded-full px-4 text-sm cursor-pointer transition-colors ${theme === "dark"
-              ? "bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300"
-              : "bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-600"
-              }`}
-          />
-
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center justify-between text-sm font-medium px-4 text-slate-500">
-
-          <button
-            onClick={handleAsk}
-            className="flex items-center gap-2 hover:text-blue-500 transition-colors"
-          >
-            <i className="fa-solid fa-shield-halved"></i>
-            Ask
-          </button>
-
-          <div className="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
-
-          <button
-            onClick={handleAnalyze}
-            className="flex items-center gap-2 hover:text-blue-500 transition-colors"
-          >
-            <i className="fa-solid fa-code-merge"></i>
-            Analyze
-          </button>
-
-          <div className="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
-
-          <button
-            onClick={handleBroadcast}
-            className="flex items-center gap-2 hover:text-blue-500 transition-colors"
-          >
-            <i className="fa-solid fa-bolt"></i>
-            Broadcast
-          </button>
-
-        </div>
+        ))}
       </div>
-
-      {/* Questions */}
-      {questions.map((question) => (
-        <QuestionCard
-          key={question._id || question.id}
-          question={question}
-          theme={theme}
-          currentUser={user}
-          onDelete={onDelete}
-          onUpdate={onUpdate}
-        />
-      ))}
 
       {/* Empty State */}
       {questions.length === 0 && (
         <div
-          className={`p-12 text-center rounded-lg border ${theme === "dark"
-            ? "bg-slate-900 border-slate-800"
-            : "bg-white border-slate-200"
+          className={`p-16 text-center rounded-sm border flex flex-col items-center justify-center ${theme === "dark"
+            ? "bg-slate-950 border-dashed border-cyan-900/50"
+            : "bg-slate-50 border-dashed border-slate-300"
             }`}
         >
-          <i className="fa-solid fa-radar text-4xl text-slate-300 mb-4"></i>
-
-          <p className="text-slate-500">
-            No active logs matching your criteria.
+          <div className="relative mb-6">
+            <i className={`fa-solid fa-radar text-5xl opacity-20 ${theme === 'dark' ? 'text-cyan-500' : 'text-slate-400'}`}></i>
+            <div className={`absolute inset-0 rounded-full border border-current animate-ping opacity-20 ${theme === 'dark' ? 'text-cyan-500' : 'text-slate-400'}`}></div>
+          </div>
+          <p className={`font-mono text-xs tracking-widest uppercase ${theme === 'dark' ? 'text-cyan-600' : 'text-slate-500'}`}>
+            [ NO SECTOR DATA FOUND ]
           </p>
-
         </div>
       )}
 

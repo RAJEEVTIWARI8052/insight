@@ -1,6 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 
-const NeuralCursor: React.FC = () => {
+interface NeuralCursorProps {
+  theme?: 'light' | 'dark';
+}
+
+const NeuralCursor: React.FC<NeuralCursorProps> = ({ theme = 'light' }) => {
     const [points, setPoints] = useState<{ x: number; y: number; time: number }[]>([]);
     const mousePos = useRef({ x: -100, y: -100 });
 
@@ -35,7 +39,7 @@ const NeuralCursor: React.FC = () => {
         <div className="fixed inset-0 pointer-events-none z-[99999] overflow-hidden">
             {/* Laser Point */}
             <div
-                className="absolute w-2 h-2 -ml-1 -mt-1 bg-blue-500 rounded-full shadow-[0_0_15px_#3b82f6] z-10"
+                className={`absolute w-2 h-2 -ml-1 -mt-1 rounded-full z-10 ${theme === 'dark' ? 'bg-[#3B82F6] shadow-[0_0_10px_#3B82F6]' : 'bg-blue-600 shadow-[0_0_10px_#2563EB]'}`}
                 style={{ left: `${mousePos.current.x}px`, top: `${mousePos.current.y}px` }}
             />
 
@@ -51,7 +55,7 @@ const NeuralCursor: React.FC = () => {
                 <path
                     d={pathData}
                     fill="none"
-                    stroke="rgba(59, 130, 246, 0.1)"
+                    stroke={theme === 'dark' ? "rgba(59, 130, 246, 0.15)" : "rgba(37, 99, 235, 0.1)"}
                     strokeWidth="4"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -62,7 +66,7 @@ const NeuralCursor: React.FC = () => {
                 <path
                     d={pathData}
                     fill="none"
-                    stroke="rgba(59, 130, 246, 0.3)"
+                    stroke={theme === 'dark' ? "rgba(59, 130, 246, 0.4)" : "rgba(37, 99, 235, 0.3)"}
                     strokeWidth="1"
                     strokeLinecap="round"
                     strokeLinejoin="round"

@@ -28,6 +28,8 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
   const [isAutoDetecting, setIsAutoDetecting] = useState(true);
   const [autoResolvedData, setAutoResolvedData] = useState<{ expertResponse: string; topic: string } | null>(null);
   const [liveResolution, setLiveResolution] = useState<{ expertResponse: string; originalTitle: string } | null>(null);
+  const [experts, setExperts] = useState<{ _id: string; name: string; username?: string; experience?: number }[]>([]);
+  const [mentionedExpertId, setMentionedExpertId] = useState("");
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -52,6 +54,25 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
     const timeout = setTimeout(checkDupe, 500);
     return () => clearTimeout(timeout);
   }, [title, getToken]);
+
+  useEffect(() => {
+    const fetchExperts = async () => {
+      try {
+        const token = await getToken();
+        if (token) {
+          const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/experts`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setExperts(res.data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch experts", e);
+      }
+    };
+    if (mode === "ask") {
+      fetchExperts();
+    }
+  }, [mode, getToken]);
 
   // Auto-detection logic for topics
   useEffect(() => {
@@ -89,7 +110,8 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
           title,
           content,
           topic,
-          bypassDeduplication: bypass
+          bypassDeduplication: bypass,
+          mentionedExpertId: mentionedExpertId || undefined
         },
         {
           headers: {
@@ -210,16 +232,35 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
                 />
 
                 {liveResolution && !autoResolvedData && (
-                  <div className="mt-4 p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 animate-fade-down">
-                    <div className="flex items-center gap-2 mb-2">
-                      <i className="fa-solid fa-sparkles text-blue-500 text-xs"></i>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-blue-500">Instant AI Insight</span>
+                  <div className={`mt-4 rounded-2xl border overflow-hidden animate-fade-down ${theme === 'dark' ? 'bg-emerald-950/20 border-emerald-700/50' : 'bg-emerald-50 border-emerald-200'}`}>
+                    {/* Header */}
+                    <div className={`flex items-center gap-2 px-4 py-3 border-b ${theme === 'dark' ? 'bg-emerald-900/30 border-emerald-800/50' : 'bg-emerald-100/60 border-emerald-200'}`}>
+                      <i className="fa-solid fa-circle-check text-emerald-500 text-sm"></i>
+                      <span className={`text-[11px] font-black uppercase tracking-widest ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'}`}>Instant Answer Found</span>
+                      <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full ${theme === 'dark' ? 'bg-emerald-800/50 text-emerald-300' : 'bg-emerald-200 text-emerald-700'}`}>
+                        Similar: "{liveResolution.originalTitle.substring(0, 40)}{liveResolution.originalTitle.length > 40 ? '…' : ''}"
+                      </span>
                     </div>
-                    <p className={`text-[12px] font-bold mb-2 ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
-                      Similarity found with: <span className="text-blue-500">"{liveResolution.originalTitle}"</span>
-                    </p>
-                    <div className={`p-3 rounded-xl text-xs leading-relaxed border ${theme === 'dark' ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-white border-slate-200 text-slate-600'}`}>
-                      {liveResolution.expertResponse.substring(0, 150)}...
+                    {/* Full Answer */}
+                    <div className="px-4 py-3">
+                      <p className={`text-sm leading-relaxed ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
+                        {liveResolution.expertResponse}
+                      </p>
+                    </div>
+                    {/* Action */}
+                    <div className={`px-4 py-3 border-t flex gap-2 ${theme === 'dark' ? 'border-emerald-800/40' : 'border-emerald-200'}`}>
+                      <button
+                        onClick={onClose}
+                        className="flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-700 text-white transition-colors flex items-center justify-center gap-2"
+                      >
+                        <i className="fa-solid fa-check"></i> Got it, close
+                      </button>
+                      <button
+                        onClick={() => setLiveResolution(null)}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${theme === 'dark' ? 'text-slate-400 hover:bg-slate-800' : 'text-slate-500 hover:bg-slate-100'}`}
+                      >
+                        Ask anyway
+                      </button>
                     </div>
                   </div>
                 )}
@@ -238,6 +279,26 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
                   onChange={(e) => setContent(e.target.value)}
                 />
               </div>
+
+              {mode === "ask" && (
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 px-1 block ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Mention an Expert (Optional)
+                  </label>
+                  <select
+                    value={mentionedExpertId}
+                    onChange={(e) => setMentionedExpertId(e.target.value)}
+                    className={`w-full p-4 rounded-[1.5rem] border text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all ${theme === "dark" ? "bg-slate-950/80 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900"}`}
+                  >
+                    <option value="">No one (Open Inquiry)</option>
+                    {experts.map(expert => (
+                      <option key={expert._id} value={expert._id}>
+                        {expert.name || expert.username} ({expert.experience || 0} yrs exp)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div>
                 <div className="flex items-center justify-between mb-2 px-1">

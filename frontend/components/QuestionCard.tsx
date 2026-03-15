@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Question, User } from '../types';
 import axios from 'axios';
 import { useAuth } from '@clerk/clerk-react';
-import ExpertResolutionModal from './ExpertResolutionModal';
+import AnswerDialog from './AnswerDialog';
 
 interface QuestionCardProps {
   question: Question;
@@ -17,12 +17,13 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, theme, currentUse
   const { getToken } = useAuth();
   const [upvotes, setUpvotes] = React.useState(question.upvotes?.length || 0);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const [isExpertModalOpen, setIsExpertModalOpen] = React.useState(false);
+  const [isAnswerDialogOpen, setIsAnswerDialogOpen] = React.useState(false);
   const [showToast, setShowToast] = React.useState(false);
+  const [answerCount, setAnswerCount] = React.useState((question.responses?.length || 0) + (question.answers?.length || 0));
 
-  const isAuthor = currentUser && (currentUser.id === question.author?.id || currentUser.id === question.author?._id);
+
   const isExpert = currentUser?.role === 'expert';
-  const canDelete = isAuthor || isExpert;
+  const canDelete = !!currentUser; // show to any logged-in user; backend enforces author/expert only
 
   const topAnswer = question.answers?.length > 0
     ? question.answers[0]
@@ -90,204 +91,169 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, theme, currentUse
   };
 
   const handleIconClick = (e: React.MouseEvent) => {
-    if (isExpert) {
+    if (currentUser) {
       e.preventDefault();
-      setIsExpertModalOpen(true);
+      setIsAnswerDialogOpen(true);
     }
   };
 
   return (
     <div
-      className={`group rounded-3xl border shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden ${theme === 'dark'
-        ? 'bg-slate-900/60 border-slate-800/60 hover:border-blue-500/50'
-        : 'bg-white border-slate-200/80 hover:border-blue-300'
-        } hover:-translate-y-1`}
+      className={`group relative overflow-hidden rounded-2xl border transition-all duration-300 ${theme === 'dark'
+        ? 'bg-[#131A2B] border-slate-800 hover:border-slate-600 shadow-sm'
+        : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm'
+        }`}
     >
+      {/* Top Deco Line */}
+      <div className={`absolute top-0 left-0 right-0 h-1 ${theme === 'dark' ? 'bg-blue-500/20 group-hover:bg-blue-500' : 'bg-blue-500/10 group-hover:bg-blue-500'} transition-colors`}></div>
 
-      <div className="p-5">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="relative">
-            <img src={question.author?.avatar} alt="author" className="w-10 h-10 rounded-2xl object-cover border-2 border-white dark:border-slate-800 shadow-sm" />
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white dark:border-slate-900"></div>
+      {/* Grid Pattern Background */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+
+      <div className="p-4 relative z-10">
+        
+        {/* Header: Meta Info */}
+        <div className={`flex items-start justify-between mb-4 pb-3 border-b ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-full overflow-hidden shrink-0 border ${theme === 'dark' ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-slate-100'}`}>
+               <img src={question.author?.avatar} alt="op" className="w-full h-full object-cover" />
+            </div>
+            <div className="flex flex-col">
+              <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-900'}`}>
+                {question.author?.name || 'Anonymous User'}
+              </span>
+              <span className="text-xs text-slate-500 flex items-center gap-2">
+                 {question.createdAt ? new Date(question.createdAt).toLocaleDateString() : 'Recent'} <span className="opacity-50">•</span> {question.topic}
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col">
-            <span
-              className={`text-sm font-bold font-outfit hover:text-blue-600 transition-colors cursor-pointer ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'
-                }`}
-            >
-              {question.author?.name || 'Anonymous'}
-            </span>
-            <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold flex items-center gap-1.5">
-              <i className="fa-solid fa-clock-rotate-left"></i>
-              {question.createdAt ? new Date(question.createdAt).toLocaleDateString() : 'Just now'}
-              <span className="opacity-30">•</span>
-              <span className="text-blue-500">{question.topic}</span>
-            </span>
-          </div>
-          <div className="ml-auto relative">
+
+          <div className="flex items-center gap-2">
+            {question.expertResponse && (
+               <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-wider border ${theme === 'dark' ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}`}>
+                  Resolved
+               </span>
+            )}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-all"
+              className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${theme === 'dark' ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
             >
-              <i className="fa-solid fa-ellipsis-vertical"></i>
+              <i className="fa-solid fa-ellipsis-vertical text-sm"></i>
             </button>
 
             {isMenuOpen && (
-              <div className="absolute right-0 mt-2 w-48 rounded-2xl shadow-2xl py-2 z-10 glass overflow-hidden border border-slate-200 dark:border-slate-700">
-                {canDelete && (
+              <>
+                {/* Backdrop to close menu */}
+                <div className="fixed inset-0 z-10" onClick={() => setIsMenuOpen(false)} />
+                <div className={`absolute right-0 top-10 w-52 rounded-2xl py-2 z-20 shadow-2xl border overflow-hidden ${theme === 'dark' ? 'bg-[#1C253B] border-slate-700' : 'bg-white border-slate-200'}`}>
+                  {/* Share Link — always visible */}
                   <button
-                    onClick={() => {
-                      handleDelete();
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 w-full text-left font-semibold transition-colors"
+                    onClick={handleShare}
+                    className={`flex items-center gap-3 px-4 py-2.5 w-full text-left text-sm font-medium transition-colors ${theme === 'dark' ? 'text-slate-300 hover:bg-slate-700/50' : 'text-slate-700 hover:bg-slate-50'}`}
                   >
-                    <i className="fa-solid fa-trash-can text-xs"></i>
-                    Delete Issue
+                    <span className={`w-7 h-7 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-blue-900/40 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
+                      <i className="fa-solid fa-link text-[11px]"></i>
+                    </span>
+                    Share via Link
                   </button>
-                )}
-                <button
-                  onClick={handleShare}
-                  className={`flex items-center gap-2 px-4 py-2.5 text-sm w-full text-left font-semibold transition-colors ${theme === 'dark' ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-50'
-                    }`}
-                >
-                  <i className="fa-solid fa-share text-xs"></i>
-                  Share Issue
-                </button>
-              </div>
+
+                  {/* Separator + Delete — only for author/expert */}
+                  {canDelete && (
+                    <>
+                      <div className={`mx-4 my-1 border-t ${theme === 'dark' ? 'border-slate-700' : 'border-slate-100'}`} />
+                      <button
+                        onClick={() => { handleDelete(); setIsMenuOpen(false); }}
+                        className={`flex items-center gap-3 px-4 py-2.5 w-full text-left text-sm font-medium transition-colors ${theme === 'dark' ? 'text-rose-400 hover:bg-rose-500/10' : 'text-rose-600 hover:bg-rose-50'}`}
+                      >
+                        <span className={`w-7 h-7 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-rose-900/30 text-rose-400' : 'bg-rose-50 text-rose-500'}`}>
+                          <i className="fa-solid fa-trash text-[11px]"></i>
+                        </span>
+                        Delete Issue
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>
 
-        {/* Toast Notification */}
-        {showToast && (
-          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-bounce-subtle">
-            <div className="bg-blue-600 text-white px-6 py-2.5 rounded-2xl shadow-2xl flex items-center gap-2 font-black text-xs uppercase tracking-widest border border-blue-400">
-              <i className="fa-solid fa-check-circle"></i>
-              Network Link Copied
-            </div>
-          </div>
-        )}
-
-        <Link to={`/question/${question.id}`} className="block">
-          <h2
-            className={`text-xl font-bold font-outfit mb-2 leading-snug group-hover:text-blue-600 transition-colors ${theme === 'dark' ? 'text-white' : 'text-slate-900'
-              }`}
-          >
+        {/* Title & Content */}
+        <Link to={`/question/${question.id}`} className="block group/title">
+          <h2 className={`text-lg font-bold leading-snug mb-2 transition-colors ${theme === 'dark' ? 'text-slate-100 group-hover/title:text-blue-400' : 'text-slate-900 group-hover/title:text-blue-600'}`}>
             {question.title}
           </h2>
         </Link>
-
+        
         {question.content && (
-          <p
-            className={`text-sm mb-5 line-clamp-2 leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
-              }`}
-          >
-            {question.content}
-          </p>
+           <p className={`text-sm mb-4 line-clamp-3 leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+             {question.content}
+           </p>
         )}
 
+        {/* Media */}
         {question.imageUrl && (
-          <div className="relative mb-5 group overflow-hidden rounded-2xl shadow-inner bg-slate-100 dark:bg-slate-950">
-            <img src={question.imageUrl} alt="context" className="w-full h-72 object-cover transform transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className={`relative mb-4 overflow-hidden rounded-sm border ${theme === 'dark' ? 'border-[#ff00ff]/30 mix-blend-screen' : 'border-slate-200'}`}>
+            <img src={question.imageUrl} alt="attachment" className="w-full h-48 object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-500" />
+            <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/60 backdrop-blur text-[8px] font-mono text-[#ff00ff] border border-[#ff00ff]/50 uppercase">IMG_DATA</div>
           </div>
         )}
 
+        {/* Expert Response Block */}
         {question.expertResponse && (
-          <div
-            className={`p-5 rounded-3xl border-l-4 mb-5 shadow-lg relative overflow-hidden group/expert-box ${theme === 'dark'
-              ? 'bg-emerald-950/20 border-emerald-500/50 text-emerald-100'
-              : 'bg-emerald-50 border-emerald-200 text-emerald-900'
-              }`}
-          >
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover/expert-box:opacity-20 transition-opacity">
-              <i className="fa-solid fa-shield-check text-4xl"></i>
+          <div className={`p-4 rounded-xl border mb-4 ${theme === 'dark' ? 'bg-[#0A1A1B] border-emerald-900/50' : 'bg-emerald-50 border-emerald-200'}`}>
+            <div className="flex justify-between items-center mb-2">
+               <span className={`text-xs font-bold uppercase tracking-wide flex items-center gap-2 ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                  <i className="fa-solid fa-badge-check"></i> Expert Resolution
+               </span>
             </div>
-            <div className="flex items-center gap-2 mb-2.5">
-              <div className="w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <i className="fa-solid fa-user-tie text-[10px] text-white"></i>
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-1.5 font-outfit">
-                Definitive Resolution
-              </span>
-            </div>
-            <p className="text-sm leading-relaxed font-semibold relative z-10">
+            <p className={`text-sm leading-relaxed ${theme === 'dark' ? 'text-emerald-100/80' : 'text-emerald-900'}`}>
               {question.expertResponse}
             </p>
           </div>
         )}
 
-        {topAnswer && !question.expertResponse && (
-          <div
-            className={`p-4 rounded-2xl border-l-4 mb-5 shadow-sm ${theme === 'dark'
-              ? 'bg-slate-800/30 border-slate-700 border-l-blue-500'
-              : 'bg-slate-50 border-slate-100 border-l-blue-400'
-              }`}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <img src={topAnswer.author.avatar} className="w-5 h-5 rounded-lg border border-white dark:border-slate-700" alt="answerer" />
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                <i className="fa-solid fa-sparkles text-blue-500"></i>
-                Top Analysis
-              </span>
-            </div>
-            <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-2 font-medium">
-              {topAnswer.content}
-            </p>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800/60">
-          <div className="flex items-center gap-2 p-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl">
-            <button
-              onClick={() => handleVote('upvote')}
-              className={`flex items-center gap-2 py-1.5 px-4 rounded-xl font-bold text-xs transition-all ${theme === 'dark'
-                ? 'text-slate-400 hover:bg-blue-900/40 hover:text-blue-400'
-                : 'text-slate-500 hover:bg-blue-100 hover:text-blue-700'
-                }`}
-            >
-              <i className="fa-solid fa-arrow-up"></i>
-              <span>{upvotes}</span>
-            </button>
-            <div className="w-px h-4 bg-slate-200 dark:bg-slate-700"></div>
-            <button
-              onClick={() => handleVote('downvote')}
-              className={`flex items-center gap-2 py-1.5 px-3 rounded-xl transition-all ${theme === 'dark'
-                ? 'text-slate-400 hover:bg-rose-900/40 hover:text-rose-400'
-                : 'text-slate-500 hover:bg-rose-100 hover:text-rose-700'
-                }`}
-            >
-              <i className="fa-solid fa-arrow-down"></i>
-            </button>
-          </div>
-
-          <div className="flex items-center gap-1.5 font-bold text-slate-400">
-            <Link
-              to={`/question/${question.id}`}
-              onClick={handleIconClick}
-              className="flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 py-2 px-4 rounded-xl transition-all hover:text-blue-500"
-            >
-              <i className="fa-regular fa-comment-dots text-lg"></i>
-              <span className="text-xs">{question.answers?.length || 0}</span>
-            </Link>
-
-            <button
-              onClick={handleShare}
-              className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all hover:text-indigo-500"
-            >
-              <i className="fa-solid fa-share-nodes text-base"></i>
-            </button>
-          </div>
+        {/* Action Bar */}
+        <div className={`flex items-center justify-between pt-4 mt-2 border-t text-sm font-medium ${theme === 'dark' ? 'border-slate-800 text-slate-400' : 'border-slate-100 text-slate-600'}`}>
+           <div className="flex gap-4">
+              <button 
+                onClick={() => handleVote('upvote')} 
+                className={`flex gap-2 items-center transition-colors ${theme === 'dark' ? 'hover:text-blue-400' : 'hover:text-blue-600'}`}
+              >
+                <i className="fa-solid fa-arrow-up"></i> <span>{upvotes}</span>
+              </button>
+              <button 
+                onClick={() => handleVote('downvote')}
+                className={`flex gap-2 items-center transition-colors ${theme === 'dark' ? 'hover:text-rose-400' : 'hover:text-rose-600'}`}
+              >
+                <i className="fa-solid fa-arrow-down"></i>
+              </button>
+           </div>
+           
+           <div className="flex gap-4">
+               <button
+                 onClick={(e) => { e.preventDefault(); if (currentUser) setIsAnswerDialogOpen(true); }}
+                 className={`flex items-center gap-2 transition-colors ${theme === 'dark' ? 'hover:text-blue-400' : 'hover:text-blue-600'}`}
+                >
+                 <i className="fa-regular fa-comment"></i> {answerCount} Comments
+               </button>
+           </div>
         </div>
+
       </div>
 
-      <ExpertResolutionModal
-        isOpen={isExpertModalOpen}
-        onClose={() => setIsExpertModalOpen(false)}
-        onSubmit={handleExpertResponse}
-        theme={theme}
-      />
+      {isAnswerDialogOpen && currentUser && (
+        <AnswerDialog
+          question={question}
+          currentUser={currentUser}
+          theme={theme}
+          onClose={() => setIsAnswerDialogOpen(false)}
+          onAnswered={(updated) => {
+            if (onUpdate) onUpdate(updated);
+            setAnswerCount((updated.responses?.length || 0) + (updated.answers?.length || 0));
+          }}
+        />
+      )}
     </div>
   );
 };

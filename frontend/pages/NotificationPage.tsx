@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import Sidebar from "../components/Sidebar";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
@@ -19,116 +18,132 @@ interface NotificationItem {
   createdAt: string;
 }
 
-const NotificationPage: React.FC<Props> = ({ theme, onSearchChange, onMarkRead }) => {
+const typeMap: Record<string, { icon: string; darkCls: string; lightCls: string; label: string }> = {
+  expert_response: { icon: "fa-shield-check",  darkCls: "bg-emerald-900/30 text-emerald-400", lightCls: "bg-emerald-50 text-emerald-600",  label: "Expert Response" },
+  upvote:          { icon: "fa-arrow-up",       darkCls: "bg-blue-900/30 text-blue-400",     lightCls: "bg-blue-50 text-blue-600",       label: "Upvote"          },
+  answer:          { icon: "fa-comment-dots",   darkCls: "bg-indigo-900/30 text-indigo-400", lightCls: "bg-indigo-50 text-indigo-600",   label: "New Answer"      },
+  mention:         { icon: "fa-at",             darkCls: "bg-violet-900/30 text-violet-400", lightCls: "bg-violet-50 text-violet-600",   label: "Mention"         },
+};
+const defaultType = { icon: "fa-bell", darkCls: "bg-slate-800 text-slate-300", lightCls: "bg-slate-100 text-slate-600", label: "Notification" };
+
+const timeAgo = (d: string) => {
+  const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
+  if (m < 1) return "Just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+};
+
+const NotificationPage: React.FC<Props> = ({ theme, onMarkRead }) => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { getToken } = useAuth();
+  const dark = theme === "dark";
 
   useEffect(() => {
-    const fetchNotifications = async () => {
+    const fetch = async () => {
       try {
         const token = await getToken();
-        // Fetch notifications
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/notifications`, {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/notifications`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setNotifications(response.data);
-
-        // Mark all as read after fetching
-        if (response.data.some((n: any) => !n.isRead)) {
+        setNotifications(res.data);
+        if (res.data.some((n: any) => !n.isRead)) {
           await axios.put(`${import.meta.env.VITE_API_URL}/api/notifications/mark-read`, {}, {
             headers: { Authorization: `Bearer ${token}` }
           });
           onMarkRead();
         }
-      } catch (error) {
-        console.error("Failed to fetch notifications:", error);
+      } catch (e) {
+        console.error("Failed to fetch notifications:", e);
       } finally {
         setIsLoading(false);
       }
     };
-
-    fetchNotifications();
+    fetch();
   }, [getToken, onMarkRead]);
 
+  const unread = notifications.filter(n => !n.isRead).length;
+
   return (
-    <main className="max-w-6xl mx-auto pt-24 px-4 flex gap-6 min-h-screen">
+    <main className={`w-full min-h-screen pt-16 px-2 pb-12 transition-colors ${dark ? "bg-[#0B0F19] text-slate-200" : "bg-[#DAE0E6] text-slate-900"}`}>
 
-      {/* Sidebar */}
-      <div className="hidden md:block w-48 shrink-0">
-        <Sidebar
-          theme={theme}
-          onTopicSelect={(topic) => onSearchChange(topic)}
-        />
-      </div>
-
-      {/* Notifications Panel */}
-      <div className="flex-1 max-w-2xl animate-fade-in">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-black font-outfit">Notifications</h1>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20">
-            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-blue-500">Live Network State</span>
+      {/* Header bar */}
+      <div className={`flex items-center justify-between px-4 py-4 mb-4 rounded-xl border mt-4 ${dark ? "bg-[#1A1A1B] border-slate-700" : "bg-white border-slate-200 shadow-sm"}`}>
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${dark ? "bg-blue-900/30 text-blue-400" : "bg-blue-50 text-blue-600"}`}>
+            <i className="fa-solid fa-bell text-lg"></i>
+          </div>
+          <div>
+            <h1 className={`text-lg font-black tracking-tight ${dark ? "text-white" : "text-slate-900"}`}>Notifications</h1>
+            <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>
+              {unread > 0 ? `${unread} unread` : "All caught up"}
+            </p>
           </div>
         </div>
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold ${dark ? "bg-blue-900/20 border-blue-800/50 text-blue-400" : "bg-blue-50 border-blue-200 text-blue-600"}`}>
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse inline-block"></span>
+          Network Live
+        </div>
+      </div>
 
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <i className="fa-solid fa-spinner fa-spin text-3xl text-blue-500"></i>
-            <p className="text-sm font-bold text-slate-500 animate-pulse">Scanning Neural Network...</p>
+      {/* Content */}
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-32 gap-3">
+          <i className={`fa-solid fa-spinner fa-spin text-3xl ${dark ? "text-blue-400" : "text-blue-500"}`}></i>
+          <p className="text-sm text-slate-500">Fetching notifications...</p>
+        </div>
+
+      ) : notifications.length === 0 ? (
+        <div className={`p-16 rounded-2xl border text-center ${dark ? "bg-[#1A1A1B] border-slate-700" : "bg-white border-slate-200 shadow-sm"}`}>
+          <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 ${dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-400"}`}>
+            <i className="fa-solid fa-bell-slash text-2xl"></i>
           </div>
-        ) : notifications.length === 0 ? (
-          <div className={`p-12 rounded-[2.5rem] border text-center ${theme === "dark" ? "bg-slate-900/40 border-slate-800" : "bg-white border-slate-200"}`}>
-            <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6">
-              <i className="fa-solid fa-bell-slash text-3xl text-slate-400"></i>
-            </div>
-            <h2 className="text-xl font-black font-outfit mb-2">System Clear</h2>
-            <p className="text-sm text-slate-500 font-medium">No alerts detected in current operational cycle.</p>
-          </div>
-        ) : (
-          <div className={`rounded-[2.5rem] border overflow-hidden shadow-2xl ${theme === "dark" ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
-            {notifications.map((n) => (
+          <h2 className={`text-lg font-bold mb-1 ${dark ? "text-white" : "text-slate-900"}`}>All Caught Up!</h2>
+          <p className="text-sm text-slate-500">No notifications yet. Replies, upvotes, and mentions will appear here.</p>
+        </div>
+
+      ) : (
+        <div className={`rounded-xl border overflow-hidden ${dark ? "bg-[#1A1A1B] border-slate-700" : "bg-white border-slate-200 shadow-sm"}`}>
+          {notifications.map((n, idx) => {
+            const cfg = typeMap[n.type] || defaultType;
+            return (
               <Link
                 key={n._id}
                 to={n.link || "#"}
-                className={`flex gap-5 p-6 border-b transition-all group ${theme === "dark"
-                    ? "border-slate-800/50 hover:bg-slate-800/40"
-                    : "border-slate-100 hover:bg-slate-50"
+                className={`flex items-start gap-4 px-5 py-4 transition-all group ${
+                  idx < notifications.length - 1 ? (dark ? "border-b border-slate-800" : "border-b border-slate-100") : ""
+                } ${!n.isRead
+                    ? (dark ? "bg-blue-950/10" : "bg-blue-50/40")
+                    : (dark ? "hover:bg-slate-800/40" : "hover:bg-slate-50")
                   }`}
               >
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${n.type === 'expert_response' ? 'bg-green-500/10 text-green-500' :
-                    n.type === 'upvote' ? 'bg-blue-500/10 text-blue-500' :
-                      'bg-slate-100 dark:bg-slate-800 text-slate-400'
-                  }`}>
-                  <i className={`fa-solid ${n.type === 'expert_response' ? 'fa-shield-check' : n.type === 'upvote' ? 'fa-arrow-up' : 'fa-info-circle'} text-xl`}></i>
+                {/* Icon */}
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${dark ? cfg.darkCls : cfg.lightCls}`}>
+                  <i className={`fa-solid ${cfg.icon} text-sm`}></i>
                 </div>
 
-                <div className="flex-1">
-                  <p className={`text-sm leading-relaxed font-bold ${theme === "dark" ? "text-slate-200" : "text-slate-900"}`}>
-                    {n.message}
-                  </p>
-                  <p className="text-[10px] mt-2 font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                    <i className="fa-regular fa-clock"></i>
-                    {new Date(n.createdAt).toLocaleString()}
+                {/* Body */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>{cfg.label}</span>
+                    {!n.isRead && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>}
+                  </div>
+                  <p className={`text-sm leading-relaxed ${dark ? "text-slate-200" : "text-slate-800"}`}>{n.message}</p>
+                  <p className={`text-xs mt-1 flex items-center gap-1 ${dark ? "text-slate-500" : "text-slate-400"}`}>
+                    <i className="fa-regular fa-clock text-[10px]"></i>
+                    {timeAgo(n.createdAt)}
                   </p>
                 </div>
 
-                {!n.isRead && (
-                  <div className="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
-                )}
+                {/* Chevron */}
+                <i className={`fa-solid fa-chevron-right text-xs mt-1 transition-transform group-hover:translate-x-0.5 ${dark ? "text-slate-700" : "text-slate-300"}`}></i>
               </Link>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="hidden lg:block w-72 shrink-0">
-        <div className={`p-6 rounded-[2rem] border sticky top-24 ${theme === "dark" ? "bg-slate-900/20 border-slate-800" : "bg-white border-slate-200"}`}>
-          <h3 className="text-xs font-black uppercase tracking-widest text-blue-500 mb-4">Protocol Status</h3>
-          <p className="text-[11px] leading-relaxed text-slate-500 font-medium">All active alerts are synchronized with your unique encryption token for secure intelligence delivery.</p>
+            );
+          })}
         </div>
-      </div>
-
+      )}
     </main>
   );
 };

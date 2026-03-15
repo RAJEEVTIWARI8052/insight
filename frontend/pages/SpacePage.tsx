@@ -48,27 +48,27 @@ const SpacesPage: React.FC<Props> = ({ theme }) => {
   };
 
   return (
-    <main className="max-w-6xl mx-auto pt-24 px-4 min-h-screen">
+    <main className="w-full mx-auto pt-24 px-4 md:px-8 min-h-screen">
 
       {/* Hero Banner */}
       <div
         className={`relative p-8 rounded-[2.5rem] mb-12 border overflow-hidden group ${theme === "dark"
-            ? "bg-slate-900/60 border-slate-800"
+            ? "bg-[#0B0F19] border-slate-800"
             : "bg-white border-slate-200"
-          } backdrop-blur-xl shadow-2xl`}
+          } shadow-sm`}
       >
-        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-125 transition-transform duration-700">
+        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform duration-700">
           <i className="fa-solid fa-shuttle-space text-8xl text-blue-500"></i>
         </div>
 
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase tracking-widest border border-blue-500/20">
+            <div className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide border ${theme === 'dark' ? 'bg-blue-900/30 text-blue-400 border-blue-800/50' : 'bg-blue-50 text-blue-600 border-blue-200'}`}>
               Network Discovery
             </div>
           </div>
-          <h1 className="text-4xl font-black font-outfit mb-4 leading-tight">
-            Welcome to <span className="text-blue-500">Spaces</span>
+          <h1 className="text-4xl font-bold mb-4 tracking-tight">
+            Welcome to <span className={theme === 'dark' ? "text-blue-400" : "text-blue-600"}>Spaces</span>
           </h1>
 
           <p
@@ -79,7 +79,7 @@ const SpacesPage: React.FC<Props> = ({ theme }) => {
           </p>
 
           <div className="flex gap-4">
-            <button className="px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-sm font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 transition-all hover:-translate-y-1">
+            <button className={`px-6 py-3 font-semibold rounded-xl text-sm transition-all shadow-sm ${theme === 'dark' ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}>
               Create a Space
             </button>
 
@@ -97,12 +97,12 @@ const SpacesPage: React.FC<Props> = ({ theme }) => {
       </div>
 
       <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-black font-outfit">
+        <h2 className="text-2xl font-bold tracking-tight">
           Discover Security Hubs
         </h2>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/5 border border-blue-500/10">
-          <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-blue-500">Active Nodes: {followedSpaces.length}</span>
+        <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
+          <div className={`w-2 h-2 rounded-full ${theme === 'dark' ? 'bg-emerald-400' : 'bg-emerald-500'}`}></div>
+          <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Active Nodes: {followedSpaces.length}</span>
         </div>
       </div>
 
@@ -112,9 +112,9 @@ const SpacesPage: React.FC<Props> = ({ theme }) => {
         {initialSpaces.map((space, i) => (
           <div
             key={i}
-            className={`group rounded-[2rem] overflow-hidden border transition-all duration-300 transform hover:-translate-y-2 ${theme === "dark"
-                ? "bg-slate-900 border-slate-800 hover:border-blue-500/50 shadow-2xl hover:shadow-blue-500/5"
-                : "bg-white border-slate-200 hover:border-blue-400 shadow-xl"
+            className={`group rounded-2xl overflow-hidden border transition-all duration-300 ${theme === "dark"
+                ? "bg-[#131A2B] border-slate-800 hover:border-slate-600"
+                : "bg-white border-slate-200 hover:border-slate-300 shadow-sm"
               }`}
           >
             <div className="relative h-40 overflow-hidden">
@@ -143,9 +143,9 @@ const SpacesPage: React.FC<Props> = ({ theme }) => {
 
               <button
                 onClick={() => toggleFollow(space.name)}
-                className={`w-full py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${followedSpaces.includes(space.name)
-                    ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                    : "bg-blue-600 text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700"
+                className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all border ${followedSpaces.includes(space.name)
+                    ? (theme === 'dark' ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200')
+                    : (theme === 'dark' ? 'bg-blue-600 text-white border-blue-500 hover:bg-blue-500' : 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700')
                   }`}
               >
                 {followedSpaces.includes(space.name) ? (

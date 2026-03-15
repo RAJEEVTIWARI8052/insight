@@ -5,6 +5,8 @@ export interface User {
   avatar: string;
   bio?: string;
   role?: 'user' | 'expert';
+  experience?: number;
+  expertise?: string[];
 }
 
 export interface Answer {
@@ -25,11 +27,15 @@ export interface Question {
   author: User;
   topic: string;
   timestamp: string;
+  createdAt?: string;
   answers: Answer[];
+  responses?: { _id?: string; text: string; author: User; createdAt?: string }[];
+  upvotes?: any[];
   imageUrl?: string;
   category?: string;
   expertResponse?: string;
   status?: 'open' | 'answered' | 'closed';
+  mentionedExpertId?: string;
 }
 
 export interface Topic {

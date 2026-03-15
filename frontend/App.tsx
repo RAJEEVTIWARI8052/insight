@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import FollowingPage from "./pages/FollowingPage";
 import SpacePage from "./pages/SpacePage";
-import Homepage from "./pages/Homepage";
+import StudentDashboard from "./pages/StudentDashboard";
+import ExpertDashboard from "./pages/ExpertDashboard";
 import QuestionDetail from "./components/QuestionDetail";
 import { SignIn, SignUp, SignedIn, SignedOut, useUser, useAuth } from "@clerk/clerk-react";
 import CreateQuestionModal from "./components/CreateQuestionModal";
@@ -11,7 +12,9 @@ import { Question, User as LocalUser } from "./types";
 import { initialQuestions } from "./data/mockData";
 import NotificationsPage from "./pages/NotificationPage";
 import SpacesPage from "./pages/SpacePage";
+import ExpertDirectory from "./pages/ExpertDirectory";
 import Navbar from "./components/Navbar";
+import RoleTransitionModal from "./components/RoleTransitionModal";
 import NeuralCursor from "./components/NeuralCursor";
 import axios from "axios";
 
@@ -34,6 +37,7 @@ const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [postMode, setPostMode] = useState<"ask" | "analyze" | "broadcast">("ask");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
 
   const openModal = (mode: "ask" | "analyze" | "broadcast" = "ask") => {
     setPostMode(mode);
@@ -113,10 +117,20 @@ const App: React.FC = () => {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
-  const handleToggleRole = async () => {
+  const handleToggleRoleClick = () => {
+    if (currentUser?.role === 'user') {
+      setIsRoleModalOpen(true);
+    } else {
+      if (window.confirm('Are you sure you want to deactivate your Expert status and become a standard User again?')) {
+        submitRoleToggle(0); // Switching back to user doesn't need experience config
+      }
+    }
+  };
+
+  const submitRoleToggle = async (experience: number, expertise: string[] = []) => {
     try {
       const token = await getToken();
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/toggle-role`, {}, {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/toggle-role`, { experience, expertise }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setLocalUserProfile(prev => {
@@ -128,10 +142,11 @@ const App: React.FC = () => {
         };
         return { ...prev, role: response.data.role };
       });
+      setIsRoleModalOpen(false);
       alert(`Success! Your role is now: ${response.data.role.toUpperCase()}`);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to toggle role", e);
-      alert("Failed to switch role. Please check your connection.");
+      alert(e.response?.data?.message || "Failed to switch role. Please check your connection.");
     }
   };
 
@@ -161,18 +176,15 @@ const App: React.FC = () => {
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-300 ${theme === "dark"
-        ? "bg-slate-950 text-slate-200"
-        : "bg-slate-50 text-slate-900"
-        }`}
-    >
-      <NeuralCursor />
+      className={`app-container ${theme} min-h-screen transition-colors duration-500 font-inter ${theme === 'dark' ? 'bg-[#0B0F19] text-slate-200' : 'bg-slate-50 text-slate-900'
+        }`}>
+      <NeuralCursor theme={theme} />
       <Navbar
         onOpenModal={() => openModal("ask")}
         onSearch={setSearchQuery}
         theme={theme}
         onToggleTheme={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-        onToggleRole={handleToggleRole}
+        onToggleRole={handleToggleRoleClick}
         userRole={currentUser?.role}
         notificationsCount={unreadCount}
       />
@@ -201,6 +213,12 @@ const App: React.FC = () => {
         />
 
         <Route
+          path="/experts"
+          element={
+            <ExpertDirectory theme={theme} />
+          }
+        />
+        <Route
           path="/login"
           element={
             <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
@@ -221,19 +239,35 @@ const App: React.FC = () => {
         <Route
           path="/"
           element={
-            <Homepage
-              user={currentUser}
-              theme={theme}
-              questions={filteredQuestions}
-              onLogout={() => { }}
-              onAddQuestion={handleAddQuestion}
-              onThemeToggle={toggleTheme}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              onOpenModal={openModal}
-              onDelete={handleDeleteQuestion}
-              onUpdate={handleUpdateQuestion}
-            />
+            currentUser?.role === "expert" ? (
+              <ExpertDashboard
+                user={currentUser}
+                theme={theme}
+                questions={filteredQuestions}
+                onLogout={() => { }}
+                onAddQuestion={handleAddQuestion}
+                onThemeToggle={toggleTheme}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onOpenModal={openModal}
+                onDelete={handleDeleteQuestion}
+                onUpdate={handleUpdateQuestion}
+              />
+            ) : (
+              <StudentDashboard
+                user={currentUser}
+                theme={theme}
+                questions={filteredQuestions}
+                onLogout={() => { }}
+                onAddQuestion={handleAddQuestion}
+                onThemeToggle={toggleTheme}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onOpenModal={openModal}
+                onDelete={handleDeleteQuestion}
+                onUpdate={handleUpdateQuestion}
+              />
+            )
           }
         />
 
@@ -257,6 +291,13 @@ const App: React.FC = () => {
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleAddQuestion}
           user={currentUser || { id: "guest", name: "Guest", avatar: "" } as any}
+          theme={theme}
+        />
+      )}
+      {isRoleModalOpen && (
+        <RoleTransitionModal
+          onClose={() => setIsRoleModalOpen(false)}
+          onSubmit={submitRoleToggle}
           theme={theme}
         />
       )}

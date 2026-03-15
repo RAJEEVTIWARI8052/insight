@@ -14,6 +14,12 @@ const questionSchema = new mongoose.Schema({
     ref: "User",
   },
 
+  mentionedExpertId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+
   upvotes: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"

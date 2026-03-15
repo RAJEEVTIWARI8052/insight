@@ -30,6 +30,9 @@ export const protect = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Auth Middleware Error:", error);
+    if (error.name === 'MongooseError' || error.name === 'MongoNetworkError' || error.name === 'MongoServerSelectionError') {
+      return res.status(500).json({ message: "Database connection failed", error: error.message });
+    }
     return res.status(401).json({ message: "Not authorized, session verification failed" });
   }
 };
