@@ -26,15 +26,28 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
   const [topic, setTopic] = useState("Auto-Detecting...");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isAutoDetecting, setIsAutoDetecting] = useState(true);
-  const [autoResolvedData, setAutoResolvedData] = useState<{ expertResponse: string; topic: string } | null>(null);
+  const [autoResolvedData, setAutoResolvedData] = useState<{ expertResponse: string; topic: string; originalTitle?: string } | null>(null);
   const [liveResolution, setLiveResolution] = useState<{ expertResponse: string; originalTitle: string } | null>(null);
   const [experts, setExperts] = useState<{ _id: string; name: string; username?: string; experience?: number }[]>([]);
   const [mentionedExpertId, setMentionedExpertId] = useState("");
+  const [profanityError, setProfanityError] = useState("");
   const { getToken } = useAuth();
+
+  // Client-side blocked words (mirrors backend list)
+  const BLOCKED = ["fuck","shit","bitch","asshole","bastard","cunt","dick","cock","pussy",
+    "whore","slut","fag","faggot","nigger","nigga","spic","kike","chink","retard",
+    "moron","dumbass","motherfucker","bullshit","jackass","dipshit","shithead","twat",
+    "wanker","prick","douchebag","rape","porn","XXX"];
+
+  const checkProfanity = (text: string): string => {
+    const lower = text.toLowerCase();
+    const found = BLOCKED.find(w => lower.includes(w.toLowerCase()));
+    return found ? `Inappropriate word detected. Please keep content respectful.` : "";
+  };
 
   useEffect(() => {
     const checkDupe = async () => {
-      if (title.trim().length < 5) {
+      if (title.trim().length < 10) {   // needs ≥10 chars to be meaningful
         setLiveResolution(null);
         return;
       }
@@ -45,7 +58,17 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
           `${import.meta.env.VITE_API_URL}/api/questions/check-duplicate?title=${encodeURIComponent(title)}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setLiveResolution(response.data);
+
+        if (response.data) {
+          // Duplicate found — immediately switch to the resolved answer view
+          setAutoResolvedData({
+            expertResponse: response.data.expertResponse,
+            topic: topic,
+            originalTitle: response.data.originalTitle,
+          });
+        } else {
+          setLiveResolution(null);
+        }
       } catch (e) {
         console.error("Live check failed", e);
       }
@@ -78,7 +101,6 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
   useEffect(() => {
     if (!isAutoDetecting || title.length < 3) return;
 
-    const text = (title + " " + content).toLowerCase();
     const mappings = [
       { topic: "Malware Analysis", keywords: ["virus", "worm", "ransomware", "trojan", "malware", "reverse", "forensic", "payload", "obfuscation", "spyware", "adware", "rootkit", "backdoor", "emotet", "cobalt strike", "binary", "assembly"] },
       { topic: "Network Security", keywords: ["firewall", "vlan", "network", "dns", "ip", "proxy", "packet", "sniffing", "wifi", "port", "vpn", "router", "switch", "ips", "ids", "tcp", "udp", "icmp", "arp"] },
@@ -89,16 +111,22 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
       { topic: "Incident Response", keywords: ["attack", "breached", "alert", "soc", "log", "monitor", "response", "triage", "incident", "siem", "splunk", "forensics", "endpoint", "edr", "compromise", "threat hunting"] }
     ];
 
+    const text = (title + " " + content).toLowerCase();
+    let matched = false;
     for (const mapping of mappings) {
       if (mapping.keywords.some(kw => text.includes(kw))) {
         setTopic(mapping.topic);
+        matched = true;
         break;
       }
     }
+    if (!matched) setTopic("General");
   }, [title, content, isAutoDetecting]);
 
   const handleSubmit = async (bypass: boolean = false) => {
     if (!title.trim()) return;
+    const err = checkProfanity(title) || checkProfanity(content);
+    if (err) { setProfanityError(err); return; }
 
     try {
       setIsGeneratingImage(true);
@@ -162,34 +190,55 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500"></div>
 
         {autoResolvedData ? (
-          <div className="animate-fade-in text-center py-6">
-            <div className="w-20 h-20 bg-emerald-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-emerald-500/40 animate-bounce-subtle">
-              <i className="fa-solid fa-check-double text-3xl text-white"></i>
-            </div>
-
-            <h2 className={`text-2xl font-black font-outfit mb-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-              Automatically Resolved!
-            </h2>
-            <p className={`text-sm mb-8 font-bold px-4 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-              Our system identified this as a known issue and has automatically attached a verified expert solution.
-            </p>
-
-            <div className={`p-6 rounded-3xl border-l-[6px] mb-8 text-left relative overflow-hidden group/success-dupe ${theme === 'dark' ? 'bg-emerald-950/20 border-emerald-500' : 'bg-emerald-50 border-emerald-500'}`}>
-              <div className="flex items-center gap-2 mb-3">
-                <i className="fa-solid fa-shield-check text-emerald-500"></i>
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600/80">Verified Resolution</span>
+          <div className="animate-fade-in py-4">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                  <i className="fa-solid fa-circle-check text-white text-lg"></i>
+                </div>
+                <div>
+                  <h2 className={`text-lg font-black ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Answer Found!</h2>
+                  <p className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Similar issue already resolved by an expert</p>
+                </div>
               </div>
-              <p className={`text-sm leading-relaxed font-semibold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
-                {autoResolvedData.expertResponse}
-              </p>
+              <button onClick={onClose} className={`w-9 h-9 rounded-xl flex items-center justify-center ${theme === 'dark' ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-400'}`}>
+                <i className="fa-solid fa-xmark"></i>
+              </button>
             </div>
 
-            <button
-              onClick={onClose}
-              className="w-full py-4 bg-gradient-to-br from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-2xl transition-all shadow-xl shadow-emerald-500/30 text-sm font-black uppercase tracking-widest"
-            >
-              Great, thanks!
-            </button>
+            {/* Matched question label */}
+            {autoResolvedData.originalTitle && (
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-xl mb-4 text-xs ${theme === 'dark' ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
+                <i className="fa-solid fa-link-slash text-[10px]"></i>
+                <span>Matched: <span className={`font-bold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>"{autoResolvedData.originalTitle}"</span></span>
+              </div>
+            )}
+
+            {/* Expert answer */}
+            <div className={`p-5 rounded-2xl border-l-4 mb-5 ${theme === 'dark' ? 'bg-emerald-950/20 border-emerald-500 text-slate-200' : 'bg-emerald-50 border-emerald-500 text-slate-800'}`}>
+              <div className="flex items-center gap-2 mb-3">
+                <i className="fa-solid fa-shield-check text-emerald-500 text-sm"></i>
+                <span className={`text-[10px] font-black uppercase tracking-widest ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'}`}>Expert Resolution</span>
+              </div>
+              <p className="text-sm leading-relaxed">{autoResolvedData.expertResponse}</p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={onClose}
+                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-sm font-black transition-all flex items-center justify-center gap-2"
+              >
+                <i className="fa-solid fa-check"></i> Got it, thanks!
+              </button>
+              <button
+                onClick={() => setAutoResolvedData(null)}
+                className={`px-5 py-3 rounded-2xl text-sm font-bold border transition-all ${theme === 'dark' ? 'border-slate-700 text-slate-400 hover:bg-slate-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              >
+                Ask anyway
+              </button>
+            </div>
           </div>
         ) : (
           <>
@@ -224,12 +273,43 @@ const CreateQuestionModal: React.FC<CreateQuestionModalProps> = ({
                 <input
                   type="text"
                   placeholder="e.g. Lateral movement detected in VLAN 4"
-                  className={`w-full p-4 rounded-[1.5rem] border text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all ${theme === "dark" ? "bg-slate-950/80 border-slate-700 text-white placeholder-slate-800" : "bg-slate-50 border-slate-200 text-slate-900"
-                    }`}
+                  className={`w-full p-4 rounded-[1.5rem] border text-sm font-bold focus:outline-none focus:ring-4 transition-all ${
+                    profanityError
+                      ? "border-rose-500 focus:ring-rose-500/20 focus:border-rose-500"
+                      : `focus:ring-blue-500/20 focus:border-blue-500 ${theme === "dark" ? "bg-slate-950/80 border-slate-700 text-white placeholder-slate-800" : "bg-slate-50 border-slate-200 text-slate-900"}`
+                  }`}
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                    setProfanityError(checkProfanity(e.target.value));
+                  }}
                   autoFocus
                 />
+
+                {/* Auto-detected topic badge */}
+                {isAutoDetecting && title.length >= 3 && (
+                  <div className={`mt-2 flex items-center gap-2 text-xs font-bold ${
+                    topic === "Auto-Detecting..." || topic === "General"
+                      ? theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
+                      : 'text-blue-500'
+                  }`}>
+                    <i className={`fa-solid ${
+                      topic === "Auto-Detecting..." ? 'fa-circle-notch fa-spin' : 'fa-tag'
+                    } text-[10px]`}></i>
+                    {topic === "Auto-Detecting..."
+                      ? "Detecting category..."
+                      : `Auto-detected: ${topic}`
+                    }
+                  </div>
+                )}
+
+                {/* Profanity error */}
+                {profanityError && (
+                  <div className="mt-2 flex items-center gap-2 text-rose-500 text-xs font-semibold">
+                    <i className="fa-solid fa-triangle-exclamation"></i>
+                    {profanityError}
+                  </div>
+                )}
 
                 {liveResolution && !autoResolvedData && (
                   <div className={`mt-4 rounded-2xl border overflow-hidden animate-fade-down ${theme === 'dark' ? 'bg-emerald-950/20 border-emerald-700/50' : 'bg-emerald-50 border-emerald-200'}`}>

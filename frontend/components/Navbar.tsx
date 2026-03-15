@@ -45,14 +45,13 @@ const Navbar: React.FC<NavbarProps> = ({
         {/* ── Logo ── */}
         <Link
           to="/"
-          className="flex items-center gap-2 shrink-0 mr-2 group"
+          className="flex items-center shrink-0 mr-2 group"
         >
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform group-hover:scale-105 ${dark ? "bg-blue-500" : "bg-blue-600"}`}>
-            <i className="fa-solid fa-code-branch text-white text-sm"></i>
-          </div>
-          <span className={`hidden sm:block text-lg font-extrabold tracking-tight ${dark ? "text-white" : "text-slate-900"}`}>
-            insight
-          </span>
+          <img
+            src="/logo.svg"
+            alt="Codevirus Insights"
+            className="h-9 w-auto object-contain group-hover:opacity-90 transition-opacity"
+          />
         </Link>
 
         {/* ── Search Bar (Reddit-style wide, centered feel) ── */}

@@ -1,5 +1,6 @@
 import Question from "../models/Question.js";
 import Notification from "../models/Notification.js";
+import { containsAbusiveWord, findAbusiveWord } from "../utils/profanityFilter.js";
 
 // Intelligent classifier function for Cyber Intelligence
 const classifyIssue = (title, content) => {
@@ -30,19 +31,66 @@ export const checkDuplicate = async (req, res) => {
     if (!title || title.length < 5) return res.status(200).json(null);
 
     const normalizedTitle = title.trim();
-    // Use a more flexible regex for better discovery
-    const existingQuestion = await Question.findOne({
+
+    // 1. Exact / substring match first (fastest)
+    const exactMatch = await Question.findOne({
       title: { $regex: new RegExp(normalizedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') },
-      status: "answered"
+      status: "answered",
+      expertResponse: { $exists: true, $ne: "" }
     }).sort({ createdAt: -1 });
 
-    if (existingQuestion) {
+    if (exactMatch) {
       return res.status(200).json({
-        expertResponse: existingQuestion.expertResponse,
-        originalTitle: existingQuestion.title
+        expertResponse: exactMatch.expertResponse,
+        originalTitle: exactMatch.title
       });
     }
-    res.status(200).json(null);
+
+    // 2. Keyword-based fuzzy match — find answered questions sharing significant words
+    const STOPWORDS = new Set(["the", "a", "an", "is", "in", "on", "of", "to", "and", "or", "how",
+      "why", "what", "when", "where", "i", "my", "me", "we", "can", "do", "does",
+      "for", "with", "this", "that", "it", "be", "was", "are", "not", "has", "have"]);
+
+    const keywords = normalizedTitle
+      .toLowerCase()
+      .replace(/[^\w\s]/g, "")
+      .split(/\s+/)
+      .filter(w => w.length >= 3 && !STOPWORDS.has(w));
+
+    if (keywords.length === 0) return res.status(200).json(null);
+
+    // Build OR conditions: each keyword must appear in the title
+    const keywordConditions = keywords.map(kw => ({
+      title: { $regex: new RegExp(kw, 'i') },
+      status: "answered",
+      expertResponse: { $exists: true, $ne: "" }
+    }));
+
+    // Find questions matching at least 2 keywords (score-based via $or)
+    const candidates = await Question.find({
+      $or: keywordConditions,
+      status: "answered",
+      expertResponse: { $exists: true, $ne: "" }
+    }).select("title expertResponse").limit(20);
+
+    // Score each candidate by how many keywords it matches
+    const scored = candidates.map(q => {
+      const tl = q.title.toLowerCase();
+      const score = keywords.filter(kw => tl.includes(kw)).length;
+      return { q, score };
+    }).filter(({ score }) => score >= Math.min(2, keywords.length));
+
+    if (scored.length === 0) return res.status(200).json(null);
+
+    // Return best match
+    scored.sort((a, b) => b.score - a.score);
+    const best = scored[0].q;
+
+    return res.status(200).json({
+      expertResponse: best.expertResponse,
+      originalTitle: best.title
+    });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -59,6 +107,16 @@ export const createQuestion = async (req, res) => {
     if (!title) {
       console.log("Validation failed: Title missing");
       return res.status(400).json({ message: "Title is required" });
+    }
+
+    // Profanity check
+    const abusiveInTitle = findAbusiveWord(title);
+    const abusiveInContent = findAbusiveWord(content);
+    if (abusiveInTitle || abusiveInContent) {
+      return res.status(400).json({
+        message: `Your post contains inappropriate language. Please remove offensive words and try again.`,
+        abusiveWord: abusiveInTitle || abusiveInContent
+      });
     }
 
     // Check for duplicates (flexible search)
@@ -261,6 +319,15 @@ export const addAnswer = async (req, res) => {
 
     if (!content || !content.trim()) {
       return res.status(400).json({ message: "Answer content is required." });
+    }
+
+    // Profanity check
+    const abusiveWord = findAbusiveWord(content);
+    if (abusiveWord) {
+      return res.status(400).json({
+        message: `Your answer contains inappropriate language. Please keep the discussion respectful.`,
+        abusiveWord
+      });
     }
 
     const question = await Question.findById(id);

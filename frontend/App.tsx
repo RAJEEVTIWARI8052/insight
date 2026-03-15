@@ -168,11 +168,16 @@ const App: React.FC = () => {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
-  const filteredQuestions = questions.filter(
-    (q) =>
-      q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      q.topic.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredQuestions = questions.filter((q) => {
+    if (!searchQuery.trim()) return true;
+    const sq = searchQuery.toLowerCase();
+    return (
+      q.title?.toLowerCase().includes(sq) ||
+      q.topic?.toLowerCase().includes(sq) ||
+      q.content?.toLowerCase().includes(sq) ||
+      q.category?.toLowerCase().includes(sq)
+    );
+  });
 
   return (
     <div

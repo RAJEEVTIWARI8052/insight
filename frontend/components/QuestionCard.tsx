@@ -213,8 +213,23 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, theme, currentUse
           </div>
         )}
 
+        {/* Latest response preview */}
+        {answerCount > 0 && (() => {
+          const latest = [...(question.responses || []), ...(question.answers || [])].at(-1) as any;
+          const text = latest?.text || latest?.content;
+          if (!text) return null;
+          return (
+            <div className={`mb-3 px-3 py-2 rounded-lg border-l-2 text-xs ${theme === 'dark' ? 'border-blue-600 bg-slate-800/50 text-slate-400' : 'border-blue-400 bg-blue-50/60 text-slate-500'}`}>
+              <span className={`font-semibold mr-1 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                {latest?.author?.name || 'Someone'}:
+              </span>
+              {text.length > 120 ? text.slice(0, 120) + '…' : text}
+            </div>
+          );
+        })()}
+
         {/* Action Bar */}
-        <div className={`flex items-center justify-between pt-4 mt-2 border-t text-sm font-medium ${theme === 'dark' ? 'border-slate-800 text-slate-400' : 'border-slate-100 text-slate-600'}`}>
+        <div className={`flex items-center justify-between pt-3 mt-1 border-t text-sm font-medium ${theme === 'dark' ? 'border-slate-800 text-slate-400' : 'border-slate-100 text-slate-600'}`}>
            <div className="flex gap-4">
               <button 
                 onClick={() => handleVote('upvote')} 
@@ -230,13 +245,30 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, theme, currentUse
               </button>
            </div>
            
-           <div className="flex gap-4">
+           <div className="flex items-center gap-3">
+             {/* View all comments → navigates to QuestionDetail */}
+             <Link
+               to={`/question/${question._id || question.id}`}
+               className={`flex items-center gap-1.5 transition-colors ${theme === 'dark' ? 'hover:text-blue-400' : 'hover:text-blue-600'}`}
+             >
+               <i className="fa-regular fa-comment"></i>
+               <span>{answerCount} {answerCount === 1 ? 'Comment' : 'Comments'}</span>
+             </Link>
+
+             {/* Post a reply */}
+             {currentUser && (
                <button
-                 onClick={(e) => { e.preventDefault(); if (currentUser) setIsAnswerDialogOpen(true); }}
-                 className={`flex items-center gap-2 transition-colors ${theme === 'dark' ? 'hover:text-blue-400' : 'hover:text-blue-600'}`}
-                >
-                 <i className="fa-regular fa-comment"></i> {answerCount} Comments
+                 onClick={(e) => { e.preventDefault(); setIsAnswerDialogOpen(true); }}
+                 title="Write a comment"
+                 className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border transition-all ${
+                   theme === 'dark'
+                     ? 'border-slate-700 text-slate-400 hover:border-blue-600 hover:text-blue-400'
+                     : 'border-slate-200 text-slate-500 hover:border-blue-400 hover:text-blue-600'
+                 }`}
+               >
+                 <i className="fa-solid fa-plus text-[10px]"></i> Reply
                </button>
+             )}
            </div>
         </div>
 
