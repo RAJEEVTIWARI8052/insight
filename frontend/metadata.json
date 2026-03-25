@@ -1,0 +1,8 @@
+
+{
+  "name": "Codevirus Insights",
+  "description": "The premier platform for cybersecurity experts and enthusiasts to share knowledge on malware, exploits, and defense strategies.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
