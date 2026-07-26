@@ -6,7 +6,6 @@ build
 .env
 backend/.env
 frontend/.env
-backend/prisma/dev.db
-backend/prisma/dev.db-journal
+insight_db.json
 .DS_Store
 *.zip
